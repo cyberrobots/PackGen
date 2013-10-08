@@ -26,6 +26,8 @@
  * 5)	The delay (in uSec) interval which is going to be added in each stream,
  * 		if the user wants different delay for each stream.
  * 6)	The time interval (in Seconds) between two streams.
+ * 7)	Interface for receiving traffic.
+ * 8)	Interface for sending traffic.
  *
  * Exports.
  * 1)	stream characteristics *_send_stats.txt
