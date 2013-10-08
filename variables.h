@@ -16,8 +16,8 @@
 #define ETH_P_NULL		0x0808 /*Packet Protocol, self defined/don't care.*/
 
 /*Depending you distro you must put here the proper interface name.*/
-#define DEVICE			"p5p1" /*Interface_1*/
-#define DEVICE2			"p5p1" /*Interface_2*/
+//#define DEVICE			"p5p1" /*Interface_1*/
+//#define DEVICE2			"p5p1" /*Interface_2*/
 
 
 #define MAX_FILE_NAME 			50		/*The maximum size for filename*/
@@ -71,6 +71,8 @@ typedef struct{
 
 
 /*Global Variables*/
+unsigned char	*DEVICE;
+unsigned char	*DEVICE2;
 unsigned char	dst_mac[6];
 unsigned char	src_mac[6];
 unsigned char	src_mac_rec[6];

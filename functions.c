@@ -27,16 +27,20 @@ void memory_allocate(){
 void specification_print(int argc, char *argv[])
 {
 	/*Grab variables from console*/
-		if((argc-1)!=7){perror("Variable Error....!");exit(1);}
+		if((argc-1)!=9){perror("Variable Error....!");exit(1);}
 			else{
 				/*Num of streams|Path name|*/
 				path=argv[1]; //Copy local the path name;
-				NUM_OF_STREAMS=atoi(argv[2]);
-				PACKET_SIZE=atoi(argv[3]);
-				NUM_OF_PACKETS=atoi(argv[4]);
-				STARTING_DELAY=atoi(argv[5]);
-				STREAM_INTERVAL=atoi(argv[6]);
-				Transmitter->thr_interval=atoi(argv[7]);
+				NUM_OF_STREAMS				=atoi(argv[2]);
+				PACKET_SIZE					=atoi(argv[3]);
+				NUM_OF_PACKETS				=atoi(argv[4]);
+				STARTING_DELAY				=atoi(argv[5]);
+				STREAM_INTERVAL				=atoi(argv[6]);
+				Transmitter->thr_interval	=atoi(argv[7]);
+				DEVICE						=(unsigned char*)argv[8];
+				DEVICE2						=(unsigned char*)argv[9];
+				//memcpy(DEVICE,argv[8],sizeof(unsigned char)*4);
+				//memcpy(DEVICE2,argv[9],sizeof(unsigned char)*4);
 			}
 		printf("\nCreating path ./%s\n",path);
 		if (!mkdir(path,0777)) {
@@ -98,7 +102,7 @@ void netinit_transmitter(mynet *transmitter){
 	/*Network Initialize Transmitter Code*/
 	int ifindex=0;int j;
 	transmitter->sock=socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
-	strncpy(transmitter->ifr.ifr_name,DEVICE,IFNAMSIZ);
+	strncpy(transmitter->ifr.ifr_name,(const char*)DEVICE,IFNAMSIZ);
 	if (ioctl(transmitter->sock, SIOCGIFINDEX,&transmitter->ifr)==-1) {perror("SIOCGIFINDEX");exit(1);}
 	ifindex=transmitter->ifr.ifr_ifindex;
 	if(ioctl(transmitter->sock,SIOCGIFHWADDR,&transmitter->ifr)==-1){perror("SIOCGIFHWADDR");exit(1);}
@@ -313,7 +317,7 @@ void tx_result(char **tx_path,int sent,int tx_sock,int loop, int delay, int size
 void netinit_receiver(mynet *receiver){
 	int ifindex_rec,j;
 	receiver->sock=socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
-	strncpy(receiver->ifr.ifr_name,DEVICE2,IFNAMSIZ);
+	strncpy(receiver->ifr.ifr_name,(const char*)DEVICE2,IFNAMSIZ);
 	if (ioctl(receiver->sock, SIOCGIFINDEX,&receiver->ifr)==-1) {perror("SIOCGIFINDEX");exit(1);}
 	ifindex_rec=receiver->ifr.ifr_ifindex;
 	if(ioctl(receiver->sock,SIOCGIFHWADDR,&receiver->ifr)==-1){perror("SIOCGIFHWADDR");exit(1);}
