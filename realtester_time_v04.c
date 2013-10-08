@@ -62,12 +62,6 @@ int main(int argc, char *argv[]){
 	dst_mac[2]=0x64;dst_mac[3]=0x06;
 	dst_mac[4]=0x06;dst_mac[5]=0x57;
 #endif
-	/*Aleka PC*/
-#ifdef ALEKA
-	dst_mac[0]=0x00;dst_mac[1]=0x1A;
-	dst_mac[2]=0x4D;dst_mac[3]=0x53;
-	dst_mac[4]=0x08;dst_mac[5]=0xB7;
-#endif
 	/*Laptop*/
 #ifdef LAPTOP
 	dst_mac[0]=0x8C;dst_mac[1]=0x73;
