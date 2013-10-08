@@ -35,7 +35,7 @@
  */
 
 /*Only Predefined MAC ADDRESSES*/
-#define SOTIRIANA 	//Define the target machine.
+#define ZERMATT 	//Define the target machine.
 
 #include "libraries.h"
 #include "variables.h"

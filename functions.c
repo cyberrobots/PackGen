@@ -234,7 +234,7 @@ void rx_result(char **rx_path,int rec,int rx_sock,int loop, int size)
 		strcat(fname_recv_stats,packet_size);
 		strcpy(fname_time_analysis,fname_recv_stats);
 		strcat(fname_recv_stats,"_recv_stats.txt");
-		strcat(fname_time_analysis,"_time_analysis.txt");
+		strcat(fname_time_analysis,"_time_analysis.m");
 		/*File open & descriptor*/
 		recv_stats		=fopen(fname_recv_stats,"w");
 		if(recv_stats==NULL){perror("No File or Bad Directory");exit(1);}
@@ -247,7 +247,7 @@ void rx_result(char **rx_path,int rec,int rx_sock,int loop, int size)
 		fprintf(recv_stats,"Data Size              :\t%8i.\n",size);
 		fprintf(recv_stats,"Packets Sent           :\t%8i.\n",rec);
 		fprintf(time_analysis,"%%Timining Analysis Report For MATLAB processing!\n\n");
-		fprintf(time_analysis,"vector=[\n");
+		fprintf(time_analysis,"vector%i=[\n",loop);
 		temp=Array[0].INTERARRIVAL_TIME;
 		fprintf(time_analysis,"%7i,%8li,%12li;\n",Array[0].ID,Array[0].LATENCY,(Array[0].INTERARRIVAL_TIME-temp));
 		for(i=1;i<NUM_OF_PACKETS;i++){
