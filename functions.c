@@ -249,7 +249,7 @@ void rx_result(char **rx_path,int rec,int rx_sock,int loop, int size)
 		fprintf(recv_stats,"Iteration              :\t%8i.\n",loop);
 		fprintf(recv_stats,"For Socket             :\t%8i.\n",rx_sock);
 		fprintf(recv_stats,"Data Size              :\t%8i.\n",size);
-		fprintf(recv_stats,"Packets Sent           :\t%8i.\n",rec);
+		fprintf(recv_stats,"Packets Recv           :\t%8i.\n",rec);
 		fprintf(time_analysis,"%%Timining Analysis Report For MATLAB processing!\n\n");
 		fprintf(time_analysis,"vector%i=[\n",loop);
 		temp=Array[0].INTERARRIVAL_TIME;
