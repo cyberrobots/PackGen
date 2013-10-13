@@ -21,13 +21,14 @@ void memory_allocate(){
 	/*Thread structures*/
 	Transmitter					=(ThreadArg*)malloc(sizeof(ThreadArg));
 	Receiver					=(RcvArg*)malloc(sizeof(RcvArg));
+	Transmitter->dst_mac		=(unsigned char*)malloc(sizeof(unsigned char)*ETH_MAC_LEN);
 	return;
 }
 
 void specification_print(int argc, char *argv[])
 {
 	/*Grab variables from console*/
-		if((argc-1)!=9){perror("Variable Error....!");exit(1);}
+		if((argc-1)!=10){perror("Variable Error....!");exit(1);}
 			else{
 				/*Num of streams|Path name|*/
 				path=argv[1]; //Copy local the path name;
@@ -39,8 +40,14 @@ void specification_print(int argc, char *argv[])
 				Transmitter->thr_interval	=atoi(argv[7]);
 				DEVICE						=(unsigned char*)argv[8];
 				DEVICE2						=(unsigned char*)argv[9];
-				//memcpy(DEVICE,argv[8],sizeof(unsigned char)*4);
-				//memcpy(DEVICE2,argv[9],sizeof(unsigned char)*4);
+				/*Grab the MAC Address for Console.*/
+				if(mac_import(argv[10],Transmitter->dst_mac)!=0)
+				{
+					perror("Wrong MAC");
+					exit(1);
+				}
+				printf("MAC OK....!\n");
+
 			}
 		printf("\nCreating path ./%s\n",path);
 		if (!mkdir(path,0777)) {
@@ -66,6 +73,23 @@ void specification_print(int argc, char *argv[])
 		return;
 }
 
+int mac_import(char *input,unsigned char *OUT)
+{
+	unsigned char MAC_in[6];
+	int i;
+
+	if(sscanf(input,"%2X:%2X:%2X:%2X:%2X:%2X",&MAC_in[0],&MAC_in[1],&MAC_in[2],&MAC_in[3],&MAC_in[4],&MAC_in[5])!=6){
+		printf("Put the MAC in proper format XX:XX:XX:XX:XX:XX.\n");
+		return 1;/*Wrong input code.*/
+	}
+	printf("Target MAC");
+	for(i=0;i<6;i++){
+		printf(":%2X",MAC_in[i]);
+	}
+	printf("\n");
+	memcpy(OUT,&MAC_in,6);
+	return 0; /*Success Code*/
+}
 
 void sigint(int signum){
 	/*Application Kill CleanUp Function.*/
@@ -88,6 +112,7 @@ void finish(){
 	free(fname_send_stats);
 	free(fname_recv_stats);
 	free(fname_time_analysis);
+	free(Transmitter->dst_mac);
 	free(Transmitter);
 	free(Receiver);
 	free(Array);
@@ -98,13 +123,19 @@ void finish(){
 
 
 
-void netinit_transmitter(mynet *transmitter){
+void netinit_transmitter(mynet *transmitter,unsigned char* dst_mac){
 	/*Network Initialize Transmitter Code*/
-	int ifindex=0;int j;
+	unsigned char src_mac[6];
+	int j;
+	int ifindex=0;
+	/*Open RAW socket*/
 	transmitter->sock=socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
+	/*Grab interface name.*/
 	strncpy(transmitter->ifr.ifr_name,(const char*)DEVICE,IFNAMSIZ);
+	/*Grab interface index from kernel.*/
 	if (ioctl(transmitter->sock, SIOCGIFINDEX,&transmitter->ifr)==-1) {perror("SIOCGIFINDEX");exit(1);}
 	ifindex=transmitter->ifr.ifr_ifindex;
+	/*Grab interface's with above index MAC address.*/
 	if(ioctl(transmitter->sock,SIOCGIFHWADDR,&transmitter->ifr)==-1){perror("SIOCGIFHWADDR");exit(1);}
 	transmitter->socket_address.sll_family   = PF_PACKET;
 	transmitter->socket_address.sll_protocol = htons(ETH_P_IP);
@@ -124,24 +155,27 @@ void netinit_transmitter(mynet *transmitter){
 #ifdef Debug
 	printf("Successfully got our MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n",src_mac[0],src_mac[1],src_mac[2],src_mac[3],src_mac[4],src_mac[5]);
 #endif
+	memcpy(&transmitter->mac,&src_mac,ETH_MAC_LEN);
 	transmitter->eh->h_proto=ETH_P_NULL;
 	return;
 }
 
-void datainit(void *buffer,int size){
+void datainit(void *buffer,int size,unsigned char *src_mac,unsigned char *dst_mac)
+{
 	/*Initialize Data*/
 	int i;
 	unsigned char *data;
 	data=(uint8_t*)buffer+14;
-	static_memcpy(buffer);
+	static_memcpy(buffer,src_mac,dst_mac);
 	for(i=0;i<size;i++){data[i]=(unsigned char)170;}
 	return;
 }
 
-void static_memcpy(uint8_t *buffer){
+void static_memcpy(uint8_t *buffer, unsigned char *src_mac,unsigned char *dst_mac)
+{
 	/*||Destination_mac||Source_mac||Protocol||Data||CRC||*/
-	memmove((void*)buffer,(void*)dst_mac,ETH_MAC_LEN);
-	memmove((void*)buffer+ETH_MAC_LEN,(void*)src_mac,ETH_MAC_LEN);
+	memmove(buffer,dst_mac,ETH_MAC_LEN);
+	memmove(buffer+ETH_MAC_LEN,(void*)src_mac,ETH_MAC_LEN);
 	return;
 }
 

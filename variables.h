@@ -27,11 +27,12 @@
 
 /*Type Definitions*/
 typedef struct {
-	long int	delay;
-	int			size;
-	int			loop;
-	int			thr_interval;
-	char		**path;
+	long int		delay;
+	int				size;
+	int				loop;
+	int				thr_interval;
+	char			**path;
+	unsigned char	*dst_mac;
 }ThreadArg;
 
 typedef struct {
@@ -41,10 +42,12 @@ typedef struct {
 }RcvArg;
 
 typedef struct {
-	int 	sock;
-	struct	sockaddr_ll socket_address;
-	struct	ifreq ifr;
-	struct	ethhdr *eh;
+	int 				sock;
+	struct	sockaddr_ll	socket_address;
+	struct	ifreq		ifr;
+	struct	ethhdr		*eh;
+	unsigned char		mac[6];
+	unsigned char		tr_mac[6];
 }mynet;
 
 typedef struct{
@@ -73,8 +76,8 @@ typedef struct{
 /*Global Variables*/
 unsigned char	*DEVICE;
 unsigned char	*DEVICE2;
-unsigned char	dst_mac[6];
-unsigned char	src_mac[6];
+//unsigned char	dst_mac[6];
+//unsigned char	src_mac[6];
 unsigned char	src_mac_rec[6];
 ThreadArg		*Transmitter;
 RcvArg			*Receiver;

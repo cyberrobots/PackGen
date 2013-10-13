@@ -51,37 +51,6 @@ int main(int argc, char *argv[]){
 	/*Pthread init*/
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-	/*------Static Variables--------*/
-	/*Zermatt PC*/
-#ifdef ZERMATT
-	dst_mac[0]=0x00;dst_mac[1]=0x1f;
-	dst_mac[2]=0x29;dst_mac[3]=0xdc;
-	dst_mac[4]=0x28;dst_mac[5]=0x39;
-#endif
-	/*Panahaiko PC*/
-#ifdef PANAHAIKO
-	dst_mac[0]=0xd4;dst_mac[1]=0x85;
-	dst_mac[2]=0x64;dst_mac[3]=0x06;
-	dst_mac[4]=0x06;dst_mac[5]=0x57;
-#endif
-	/*Laptop*/
-#ifdef LAPTOP
-	dst_mac[0]=0x8C;dst_mac[1]=0x73;
-	dst_mac[2]=0x6E;dst_mac[3]=0xA8;
-	dst_mac[4]=0xD7;dst_mac[5]=0xC9;
-#endif
-	/*SOTIRIANA*/
-#ifdef SOTIRIANA
-	dst_mac[0]=0x00;dst_mac[1]=0x24;
-	dst_mac[2]=0x1D;dst_mac[3]=0x12;
-	dst_mac[4]=0x40;dst_mac[5]=0xDC;
-#endif
-	/*Thanos PC*/
-#ifdef THANOSPC
-	dst_mac[0]=0x94;dst_mac[1]=0xDE;
-	dst_mac[2]=0x80;dst_mac[3]=0x27;
-	dst_mac[4]=0x4B;dst_mac[5]=0xE5;
-#endif
 	/*Main*/
 	memory_allocate(); 				//Allocate memory for the system.
 	specification_print(argc,argv);	//Print systems specification.

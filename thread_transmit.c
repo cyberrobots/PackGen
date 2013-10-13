@@ -36,8 +36,9 @@ void *transmitter(void *arg){
 	etherhead=(uint8_t*)buffer;
 	transmitter_net->eh=(struct ethhdr*)etherhead;
 	/*First init Network Data!*/
-	netinit_transmitter(transmitter_net);
-	datainit(buffer,inTransmit->size);
+	netinit_transmitter(transmitter_net,inTransmit->dst_mac);
+	/*Initialize packet before sending.*/
+	datainit(buffer,inTransmit->size,transmitter_net->mac,inTransmit->dst_mac);
 	timer=buffer+14;
 	label=buffer+32;
 	sent=0;
