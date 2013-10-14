@@ -1,10 +1,9 @@
 /*
  * functions.h
  *
- *  Created on: Jul 4, 2013
- *      Author: cuda
+ *  Created on: Oct 13, 2013
+ *      Author: slyras
  */
-
 #ifndef FUNCTIONS_H_
 #define FUNCTIONS_H_
 

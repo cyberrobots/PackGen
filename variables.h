@@ -1,8 +1,8 @@
 /*
  * variables.h
  *
- *  Created on: Jul 4, 2013
- *      Author: cuda
+ *  Created on: Oct 13, 2013
+ *      Author: slyras
  */
 
 #ifndef VARIABLES_H_
