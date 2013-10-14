@@ -76,7 +76,7 @@ typedef struct{
 /*Global Variables*/
 unsigned char	*DEVICE;
 unsigned char	*DEVICE2;
-//unsigned char	src_mac_rec[6];
+unsigned char	src_mac_rec[6];
 ThreadArg		*Transmitter;
 RcvArg			*Receiver;
 unsigned int	NUM_OF_PACKETS;
