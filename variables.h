@@ -47,7 +47,7 @@ typedef struct {
 	struct	ifreq		ifr;
 	struct	ethhdr		*eh;
 	unsigned char		mac[6];
-	unsigned char		tr_mac[6];
+	unsigned char		my_mac[6];
 }mynet;
 
 typedef struct{
@@ -76,9 +76,7 @@ typedef struct{
 /*Global Variables*/
 unsigned char	*DEVICE;
 unsigned char	*DEVICE2;
-//unsigned char	dst_mac[6];
-//unsigned char	src_mac[6];
-unsigned char	src_mac_rec[6];
+//unsigned char	src_mac_rec[6];
 ThreadArg		*Transmitter;
 RcvArg			*Receiver;
 unsigned int	NUM_OF_PACKETS;

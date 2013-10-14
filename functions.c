@@ -350,6 +350,7 @@ void tx_result(char **tx_path,int sent,int tx_sock,int loop, int delay, int size
 
 void netinit_receiver(mynet *receiver){
 	int ifindex_rec,j;
+	unsigned char	src_mac_rec[6];
 	receiver->sock=socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL));
 	strncpy(receiver->ifr.ifr_name,(const char*)DEVICE2,IFNAMSIZ);
 	if (ioctl(receiver->sock, SIOCGIFINDEX,&receiver->ifr)==-1) {perror("SIOCGIFINDEX");exit(1);}
@@ -368,6 +369,7 @@ void netinit_receiver(mynet *receiver){
 	receiver->socket_address.sll_addr[7]  = 0x00;
 	for(j=0;j<6;j++){src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];
 			src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];}
+	//memcpy(mynet.src_mac_rec,ETH_MAC_LEN);
 #ifdef DEBUG
 	printf("Socket for Receiver with ID: %i created.\n",receiver->sock);
 	printf("Successfully got our MAC address (receive interface): %02X:%02X:%02X:%02X:%02X:%02X\n",
