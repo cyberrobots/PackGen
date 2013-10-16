@@ -49,7 +49,6 @@
 /*Main functions*/
 int main(int argc, char *argv[]){
 	printf("\n***Starting The Generator***\n");
-	printf("---System Initialize---\n");
 	/*Pthread init*/
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);

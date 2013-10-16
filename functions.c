@@ -27,6 +27,7 @@ void memory_allocate(){
 
 void specification_print(int argc, char *argv[])
 {
+	printf("\n---System Initialize---\n");
 	/*Grab variables from console*/
 		if((argc-1)!=10){perror("Variable Error....!");exit(1);}
 			else{
@@ -367,8 +368,10 @@ void netinit_receiver(mynet *receiver){
 	receiver->socket_address.sll_halen    = ETH_ALEN;
 	receiver->socket_address.sll_addr[6]  = 0x00;
 	receiver->socket_address.sll_addr[7]  = 0x00;
-	for(j=0;j<6;j++){src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];
-			src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];}
+	for(j=0;j<6;j++){
+		src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];
+		//src_mac_rec[j]=receiver->ifr.ifr_hwaddr.sa_data[j];
+	}
 	//memcpy(mynet.src_mac_rec,ETH_MAC_LEN);
 #ifdef DEBUG
 	printf("Socket for Receiver with ID: %i created.\n",receiver->sock);
