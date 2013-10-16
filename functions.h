@@ -1,9 +1,12 @@
 /*
  * functions.h
  *
- *  Created on: Oct 13, 2013
- *      Author: slyras
+ *  Created on	: Jul 4, 2013
+ *  Finished on	: Jul 10 2013
+ *  Author		: Sotiris Lyras
+ *  Version		: v04
  */
+
 #ifndef FUNCTIONS_H_
 #define FUNCTIONS_H_
 
