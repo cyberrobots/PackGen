@@ -1,8 +1,10 @@
 /*
  * variables.h
  *
- *  Created on: Oct 13, 2013
- *      Author: slyras
+ *  Created on	: Jul 4, 2013
+ *  Finished on	: Jul 10 2013
+ *  Author		: Sotiris Lyras
+ *  Version		: v04
  */
 
 #ifndef VARIABLES_H_
@@ -12,7 +14,7 @@
 #define ETH_HEADER_LEN	ETH_HLEN	/*Total octets in header.*/
 #define BUF_SIZE		1518
 #define ETH_FRAME_		TOTALLEN	1518
-#define ETH_MAC_LEN	ETH_ALEN
+#define ETH_MAC_LEN		ETH_ALEN
 #define ETH_P_NULL		0x0808 /*Packet Protocol, self defined/don't care.*/
 
 /*Depending you distro you must put here the proper interface name.*/
