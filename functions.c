@@ -108,7 +108,6 @@ void sigint(int signum){
 	exit(1);
 }
 
-
 void finish(){
 	/*Normally Finish CleanUp Function.*/
 	printf("\nPacket Generator Finished Normally...\n");
@@ -123,8 +122,6 @@ void finish(){
 	pthread_attr_destroy(&attr);
 	return;
 }
-
-
 
 void netinit_transmitter(mynet *transmitter,unsigned char* dst_mac){
 	/*Network Initialize Transmitter Code*/
@@ -309,7 +306,6 @@ void rx_result(char **rx_path,int rec,int rx_sock,int loop, int size)
 		printf("Data Size              :\t%8i.\n",size);
 		printf("Packets Received       :\t%8i.\n",rec);
 }
-
 
 void tx_result(char **tx_path,int sent,int tx_sock,int loop, int delay, int size,long elapsed)
 {
