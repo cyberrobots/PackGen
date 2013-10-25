@@ -11,6 +11,7 @@
 #include "variables.h"
 #include "functions.h"
 
+#define NOWRITE
 
 void *receiver(void *arg_rec){
 	printf("****In Receiver thread.****\n");
@@ -70,8 +71,13 @@ void *receiver(void *arg_rec){
 	}
 	printf("\nReceiver Thread Exiting Received:       %8i \n",rec);
 	printf("***Receiver Thread Exiting***\n");
+#ifdef WRITE
 	/*Write output file function.*/
 	rx_result(inrcv->path,rec,receiver->sock,inrcv->loop,inrcv->size);
+#endif
+#ifdef NOWRITE
+	sleep(2);
+#endif
 	pthread_cleanup_pop(1);
 	pthread_exit(NULL);
 	return NULL;
