@@ -11,7 +11,7 @@
 #include "variables.h"
 #include "functions.h"
 
-#define NOWRITE
+#define WRITE
 
 void *receiver(void *arg_rec){
 	printf("****In Receiver thread.****\n");
