@@ -47,7 +47,8 @@
 #include "variables.h"
 #include "functions.h"
 /*Main functions*/
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 	printf("\n***Starting The Generator***\n");
 	/*Pthread init*/
 	pthread_attr_init(&attr);
