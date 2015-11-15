@@ -41,6 +41,8 @@
  * 2)	stream characteristic  *_recv_stats.txt
  * 3)	stream characteristic  *_time_analysis.txt
  * --------------------------------------------------
+ * Example:
+ * sudo gdb --args ./PacketGenerator ./export 1 1400 1000000 100 100 100 eth0 eth1 00:24:1d:12:40:d1
  */
 /*Libraries*/
 #include "libraries.h"
@@ -62,16 +64,20 @@ int main(int argc, char *argv[])
 	/*Pthread init*/
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-	memory_allocate(); 				//Allocate memory for the system.
-	specification_print(argc,argv);	//Print systems specification.
-	signal(SIGINT,sigint); 			//Set the signal.
+	//Allocate memory for the system.
+    memory_allocate(); 				
+	//Print systems specification.
+    specification_print(argc,argv);	
+	//Set the signal.
+    signal(SIGINT,sigint); 			
 	int i;
-	for(i=0;i<NUM_OF_STREAMS;i++){
+	for(i=0;i<NUM_OF_STREAMS;i++)
+    {
 		Transmitter->loop=i;
 		Receiver->loop=i;
 		control=1;
 		/*Fire up threads*/
-		pthread_create(&Receiver_thr,&attr,receiver,Receiver);
+		pthread_create(&Receiver_thr,   &attr,receiver,Receiver);
 		pthread_create(&Transmitter_thr,&attr,transmitter,Transmitter);
 		/*Wait to finish the send.*/
 		pthread_join(Transmitter_thr,statusTR);
