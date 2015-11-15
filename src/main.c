@@ -49,7 +49,16 @@
 /*Main functions*/
 int main(int argc, char *argv[])
 {
+
+    // Check user id, if not sudo exit.
+    if(getuid()!=0)
+    {
+        printf("You should have [root] privilages, try running 'sudo PacketGenerator'\r\n");
+        return 1;
+    }
+
 	printf("\n***Starting The Generator***\n");
+
 	/*Pthread init*/
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
