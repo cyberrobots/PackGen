@@ -76,44 +76,44 @@ typedef struct{
 
 
 /*Global Variables*/
-unsigned char	*DEVICE;
-unsigned char	*DEVICE2;
-unsigned char	src_mac_rec[6];
-ThreadArg		*Transmitter;
-RcvArg			*Receiver;
-unsigned int	NUM_OF_PACKETS;
-unsigned int	STARTING_DELAY;
-unsigned int	STREAM_INTERVAL;
-uint8_t			control;
+extern unsigned char	*DEVICE;
+extern unsigned char	*DEVICE2;
+extern unsigned char	src_mac_rec[6];
+extern ThreadArg		*Transmitter;
+extern RcvArg			*Receiver;
+extern unsigned int	NUM_OF_PACKETS;
+extern unsigned int	STARTING_DELAY;
+extern unsigned int	STREAM_INTERVAL;
+extern uint8_t			control;
 
 /*Packet Counters*/
-unsigned int	sent;
-unsigned int	rec;
+extern unsigned int	sent;
+extern unsigned int	rec;
 
 /*Input Data*/
-int	NUM_OF_STREAMS;
-int	PACKET_SIZE;
+extern int	NUM_OF_STREAMS;
+extern int	PACKET_SIZE;
 
 /*Threads*/
-pthread_t		Transmitter_thr;
-pthread_t		Receiver_thr;
-pthread_attr_t	attr;
+extern pthread_t		Transmitter_thr;
+extern pthread_t		Receiver_thr;
+extern pthread_attr_t	attr;
 
-void *statusTR;
-void *statusRC;
+extern void *statusTR;
+extern void *statusRC;
 
 /*Statistics*/
-time_char *Array;
+extern time_char *Array;
 
 /*Files*/
-FILE	*send_stats;
-FILE	*recv_stats;
-FILE	*time_analysis;
+extern FILE	*send_stats;
+extern FILE	*recv_stats;
+extern FILE	*time_analysis;
 /*Strings for files labeling*/
-char	*path;
-char	*free_path;
-char	*fname_send_stats;
-char	*fname_recv_stats;
-char	*fname_time_analysis;
+extern char	*path;
+extern char	*free_path;
+extern char	*fname_send_stats;
+extern char	*fname_recv_stats;
+extern char	*fname_time_analysis;
 
 #endif /* VARIABLES_H_ */

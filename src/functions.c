@@ -12,6 +12,50 @@
 #include "functions.h"
 
 
+/*Global Variables*/
+unsigned char	*DEVICE         = NULL;
+unsigned char	*DEVICE2        = NULL;
+unsigned char	src_mac_rec[6];
+ThreadArg		*Transmitter    = NULL;
+RcvArg			*Receiver       = NULL;
+unsigned int	NUM_OF_PACKETS  = 0;
+unsigned int	STARTING_DELAY  = 0;
+unsigned int	STREAM_INTERVAL = 0;
+uint8_t			control;
+
+/*Packet Counters*/
+unsigned int	sent            = 0;
+unsigned int	rec             = 0;
+
+/*Input Data*/
+int	NUM_OF_STREAMS              = 0;
+int	PACKET_SIZE                 = 0;
+
+/*Threads*/
+pthread_t		Transmitter_thr;
+pthread_t		Receiver_thr;
+pthread_attr_t	attr;
+
+void *statusTR                  = NULL;
+void *statusRC                  = NULL;
+
+/*Statistics*/
+time_char *Array;
+
+/*Files*/
+FILE	*send_stats             = NULL;
+FILE	*recv_stats             = NULL;
+FILE	*time_analysis          = NULL;
+/*Strings for files labeling*/
+char	*path                   = NULL;
+char	*free_path              = NULL;
+char	*fname_send_stats       = NULL;
+char	*fname_recv_stats       = NULL;
+char	*fname_time_analysis    = NULL;
+/* End of Global variables */
+
+
+
 void memory_allocate(){
 	/*Path name to create*/
 	path						=(char*)malloc(MAX_FILE_NAME*sizeof(char));
