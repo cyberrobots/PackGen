@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     // Check user id, if not sudo exit.
     if(getuid()!=0)
     {
-        printf("You should have [root] privilages, try running 'sudo PacketGenerator'\r\n");
+        printf("You should have [root] permissions, try running 'sudo PacketGenerator'\r\n");
         return 1;
     }
 
