@@ -75,27 +75,33 @@ void specification_print(int argc, char *argv[])
 {
 	printf("\n---System Initialize---\n");
 	/*Grab variables from console*/
-		if((argc-1)!=10){perror("Variable Error....!");exit(1);}
-			else{
-				/*Num of streams|Path name|*/
-				path=argv[1]; //Copy local the path name;
-				NUM_OF_STREAMS				=atoi(argv[2]);
-				PACKET_SIZE					=atoi(argv[3]);
-				NUM_OF_PACKETS				=atoi(argv[4]);
-				STARTING_DELAY				=atoi(argv[5]);
-				STREAM_INTERVAL				=atoi(argv[6]);
-				Transmitter->thr_interval	=atoi(argv[7]);
-				DEVICE						=(unsigned char*)argv[8];
-				DEVICE2						=(unsigned char*)argv[9];
-				/*Grab the MAC Address for Console.*/
-				if(mac_import(argv[10],Transmitter->dst_mac)!=0)
-				{
-					perror("Wrong MAC");
-					exit(1);
-				}
-				printf("MAC OK....!\n");
+		if((argc-1)!=10)
+        {
+            perror("Variable Error....!");exit(1);
+        }else
+        {
+            /*Num of streams|Path name|*/
+            path=argv[1]; //Copy local the path name;
+            NUM_OF_STREAMS				=atoi(argv[2]);
+            PACKET_SIZE					=atoi(argv[3]);
+            NUM_OF_PACKETS				=atoi(argv[4]);
+            STARTING_DELAY				=atoi(argv[5]);
+            STREAM_INTERVAL				=atoi(argv[6]);
+            Transmitter->thr_interval	=atoi(argv[7]);
+            DEVICE						=(unsigned char*)argv[8];
+            DEVICE2						=(unsigned char*)argv[9];
+            
 
-			}
+            printf("Importing MAC Address..\n");
+            /*Grab the MAC Address for Console.*/
+            if(mac_import(argv[10],Transmitter->dst_mac)!=0)
+            {
+                perror("Wrong MAC");
+                exit(1);
+            }
+            printf("MAC OK....!\n");
+
+        }
 		printf("\nCreating path ./%s\n",path);
 		if (!mkdir(path,0777)) {
 			printf("PATH CREATION SUCCESS\n");
@@ -122,19 +128,25 @@ void specification_print(int argc, char *argv[])
 
 int mac_import(char *input,unsigned char *OUT)
 {
-	unsigned char MAC_in[6];
-	int i;
+	unsigned int MAC_in[6];
+	int i = 0;
 
-	if(sscanf(input,"%2X:%2X:%2X:%2X:%2X:%2X",&MAC_in[0],&MAC_in[1],&MAC_in[2],&MAC_in[3],&MAC_in[4],&MAC_in[5])!=6){
-		printf("Put the MAC in proper format XX:XX:XX:XX:XX:XX.\n");
-		return 1;/*Wrong input code.*/
-	}
+    memset(MAC_in,0,6);
+    
+    if(sscanf(input,"%x:%x:%x:%x:%x:%x",&MAC_in[0],&MAC_in[1],&MAC_in[2],&MAC_in[3],&MAC_in[4],&MAC_in[5])!=6){
+        printf("Failed reading MAC address!");
+        return 1;
+    }
+    
+
 	printf("Target MAC");
-	for(i=0;i<6;i++){
-		printf(":%2X",MAC_in[i]);
+	for(i=0;i<6;i++)
+    {
+        OUT[i] = (unsigned char)MAC_in[i];
+		printf(":%2.2X",OUT[i]);
 	}
 	printf("\n");
-	memcpy(OUT,&MAC_in,6);
+
 	return 0; /*Success Code*/
 }
 
