@@ -6,27 +6,28 @@ LD          = gcc
 CFLAGS      = -g -O0 -Wall
 LDFLAGS     = -lpthread -lrt -lm
 
+OUTPUTFILE	= PacketGenerator
 
-# Header Directories
-INCLUDES 	= ./inc/
+# Source Directories
+HEADERS_PATH 	= ./inc/
+HEADERS_FILES	= $(wildcard $(HEADERS_PATH)*.h)
+SOURCES_PATH	= ./src/
+SOURCES_FILES	= $(wildcard $(SOURCES_PATH)*.c)
 
-INC_PARAMS=$(foreach d, $(INCLUDES), -I$d)
+OBJECTS     	= $(patsubst %.c,%.o,$(SOURCES_FILES))
 
-OBJECTS     = ./src/main.o \
-              ./src/functions.o \
-              ./src/thread_receive.o \
-              ./src/thread_transmit.o
-
-%.o: %.c
-	$(CC) -c $(CFLAGS) $(INC_PARAMS) -o $@ $^
+%.o: %.c $(HEADERS_FILES)
+	$(CC) -c $(CFLAGS) -I $(HEADERS_PATH) -o $@ $<
 
 all: $(OBJECTS)
-	@echo "Linking"
-	$(LD) $(OBJECTS) $(LDFLAGS) -o PacketGenerator -Wl,-Map=PacketGenerator.map
+	@echo "Linking..."
+	$(LD) $(OBJECTS) $(LDFLAGS) -o $(OUTPUTFILE) -Wl,-Map=$(OUTPUTFILE).map
 	size PacketGenerator
 
+.PHONY: clean
 
 clean:
+	@echo "Clean..."
 	rm -rf $(OBJECTS)
 	rm -rf PacketGenerator
 	rm -rf PacketGenerator.map
