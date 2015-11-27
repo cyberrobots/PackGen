@@ -22,13 +22,13 @@ OBJECTS     	= $(patsubst %.c,%.o,$(SOURCES_FILES))
 all: $(OBJECTS)
 	@echo "Linking..."
 	$(LD) $(OBJECTS) $(LDFLAGS) -o $(OUTPUTFILE) -Wl,-Map=$(OUTPUTFILE).map
-	size PacketGenerator
+	size $(OUTPUTFILE)
 
 .PHONY: clean
 
 clean:
 	@echo "Clean..."
 	rm -rf $(OBJECTS)
-	rm -rf PacketGenerator
-	rm -rf PacketGenerator.map
+	rm -rf $(OUTPUTFILE)
+	rm -rf $(OUTPUTFILE).map
 	rm -rf *.d
