@@ -12,119 +12,620 @@
 #include "functions.h"
 
 
-/*Global Variables*/
-unsigned char	*DEVICE         = NULL;
-unsigned char	*DEVICE2        = NULL;
-unsigned char	src_mac_rec[6];
-ThreadArg		*Transmitter    = NULL;
-RcvArg			*Receiver       = NULL;
-unsigned int	NUM_OF_PACKETS  = 0;
-unsigned int	STARTING_DELAY  = 0;
-unsigned int	STREAM_INTERVAL = 0;
-uint8_t			control;
 
-/*Packet Counters*/
-unsigned int	sent            = 0;
-unsigned int	rec             = 0;
+packgen_t* new_packet_gen(void)
+{
+	packgen_t* gen = malloc(sizeof(packgen_t));
+	
+	if(!gen){
+		return NULL;
+	}
+	
+	memset(gen,0,sizeof(*gen));
+	
+	/* Assign Initial Values */
+	strcpy(gen->path,"./");
+	memset(gen->srcmac,0x00		,PGEN_ETH_MAC_LEN);
+	memset(gen->dstmac,0x00		,PGEN_ETH_MAC_LEN);
+	
+	memset(gen->p_srcmac,0x00	,PGEN_ETH_MAC_LEN);
+	memset(gen->p_dstmac,0x00	,PGEN_ETH_MAC_LEN);
+	
+	memset(gen->proto,0x08,PGEN_ETH_PROTO_LEN);
 
-/*Input Data*/
-int	NUM_OF_STREAMS              = 0;
-int	PACKET_SIZE                 = 0;
+	gen->tx_interval 	= 0;
+	gen->packetsNum  	= 0xFFFFFFFFFFFFFFFF;
+	gen->packetSize		= PGEN_ETH_FRAME;
+	gen->send_stats	 	= NULL;
+	gen->recv_stats		= NULL;
+	gen->time_analysis	= NULL;
+	gen->tx_sock		= -1;
+	gen->rx_sock		= -1;
+	
+	return gen;
+}
 
-/*Threads*/
-pthread_t		Transmitter_thr;
-pthread_t		Receiver_thr;
-pthread_attr_t	attr;
-
-void *statusTR                  = NULL;
-void *statusRC                  = NULL;
-
-/*Statistics*/
-time_char *Array;
-
-/*Files*/
-FILE	*send_stats             = NULL;
-FILE	*recv_stats             = NULL;
-FILE	*time_analysis          = NULL;
-/*Strings for files labeling*/
-char	*path                   = NULL;
-char	*free_path              = NULL;
-char	*fname_send_stats       = NULL;
-char	*fname_recv_stats       = NULL;
-char	*fname_time_analysis    = NULL;
-/* End of Global variables */
-
-
-
-void memory_allocate(){
-	/*Path name to create*/
-	path						=(char*)malloc(MAX_FILE_NAME*sizeof(char));
-	free_path=path;
-	/*File names*/
-	fname_send_stats			=(char*)malloc(MAX_FILE_NAME*sizeof(char));
-	fname_recv_stats			=(char*)malloc(MAX_FILE_NAME*sizeof(char));
-	fname_time_analysis			=(char*)malloc(MAX_FILE_NAME*sizeof(char));
-	/*Thread structures*/
-	Transmitter					=(ThreadArg*)malloc(sizeof(ThreadArg));
-	Receiver					=(RcvArg*)malloc(sizeof(RcvArg));
-	Transmitter->dst_mac		=(unsigned char*)malloc(sizeof(unsigned char)*ETH_MAC_LEN);
+void destroy_packet_gen(packgen_t *p)
+{
+	if(!p){
+		return;
+	}
+	
+	if(p->send_stats)
+		fclose(p->send_stats);
+	
+	if(p->recv_stats)
+		fclose(p->recv_stats);
+	
+	if(p->time_analysis)
+		fclose(p->send_stats);
+	
+	if(p->tx_sock > -1){
+		//PP("CleanSock[%d]",p->tx_sock );
+		close(p->tx_sock);
+	}
+	
+	if(p->rx_sock > -1){
+		//PP("CleanSock[%d]",p->rx_sock );
+		close(p->rx_sock);
+	}
+		
+	free(p);	
+		
 	return;
 }
 
-void specification_print(int argc, char *argv[])
+
+static packgen_t* _packet = NULL;
+
+void packet_gen_signal(int signum)
 {
-	printf("\n---System Initialize---\n");
-	/*Grab variables from console*/
-		if((argc-1)!=10)
-        {
-            perror("Variable Error....!");exit(1);
-        }else
-        {
-            /*Num of streams|Path name|*/
-            path=argv[1]; //Copy local the path name;
-            NUM_OF_STREAMS				=atoi(argv[2]);
-            PACKET_SIZE					=atoi(argv[3]);
-            NUM_OF_PACKETS				=atoi(argv[4]);
-            STARTING_DELAY				=atoi(argv[5]);
-            STREAM_INTERVAL				=atoi(argv[6]);
-            Transmitter->thr_interval	=atoi(argv[7]);
-            DEVICE						=(unsigned char*)argv[8];
-            DEVICE2						=(unsigned char*)argv[9];
-            
+	/*Application Kill CleanUp Function.*/
+	P_INFO("Caught signal %d\n",signum);
 
-            printf("Importing MAC Address..\n");
-            /*Grab the MAC Address for Console.*/
-            if(mac_import(argv[10],Transmitter->dst_mac)!=0)
-            {
-                perror("Wrong MAC");
-                exit(1);
-            }
-            printf("MAC OK....!\n");
-
-        }
-		printf("\nCreating path ./%s\n",path);
-		if (!mkdir(path,0777)) {
-			printf("PATH CREATION SUCCESS\n");
-		} else {
-			printf("PATH CREATION FAILURE OR PRE_EXISTED \n");
-		}
-		/*Specifications Print*/
-		printf("\nThe Numbers of Loops is:%8i.\n",NUM_OF_STREAMS);
-		printf("The Packet size is:\t%8i.\n",PACKET_SIZE);
-		printf("Number of packet is:\t%8i.\n",NUM_OF_PACKETS);
-		printf("Starting Delay is:\t%8i.\n",STARTING_DELAY);
-		printf("Stream interval is:\t%8i.\n",STREAM_INTERVAL);
-		printf("Time for next Stream is:%8i.\n",Transmitter->thr_interval);
-		/*Pass values and pointers to threads*/
-		Transmitter->delay	=STARTING_DELAY;
-		Transmitter->size	=PACKET_SIZE;
-		Transmitter->path	=&path;
-		Receiver->size		=PACKET_SIZE;
-		Receiver->path		=&path;
-		/*Allocate space for the time statics file printing.*/
-		Array=(time_char*)calloc(NUM_OF_PACKETS,sizeof(time_char));
-		return;
+	destroy_packet_gen(_packet);
+	
+	exit(0);
 }
+
+
+#define IMPORT(m)	void m(char* var,packgen_t* p);
+
+IMPORT(show_help)
+IMPORT(path_import)
+IMPORT(numOfPackets_import)
+IMPORT(txInterval_import)
+IMPORT(deviceOut_import)
+IMPORT(deviceIn_import)
+IMPORT(deviceDstMac_import)
+IMPORT(deviceSrcMac_import)
+IMPORT(protocol_import)
+
+static pgen_variable_t pgen_var_table[] =
+{
+	{"help",		show_help			,""								},
+	{"path",		path_import			,"Relative"						},
+	{"num",			numOfPackets_import	,"Packets Number"				},
+	{"inter",		txInterval_import	,"Transmit interval (usec)"		},
+	{"devout",		deviceOut_import	,"Transmit interface"			},
+	{"devin",		deviceIn_import		,"Receive interface"			},
+	{"dstmac",		deviceDstMac_import	,"Target's Rx MAC address"		},
+	{"srcmac",		deviceSrcMac_import	,"Target's Tx MAC address"		},
+	{"proto",		protocol_import		,"Protocol (default: 0x0808)"	},
+};
+#define NUM_OF_PARAMS	(sizeof(pgen_var_table) / sizeof(pgen_variable_t))
+
+void pack_gen_usage( void )
+{
+	int i;
+	
+	P_INFO("Usage:");
+	
+	for(i=0;i<NUM_OF_PARAMS;i++)
+	{
+		P_INFO("%d)\t%s\t\t%s",i,pgen_var_table[i].var_key,pgen_var_table[i].comment);
+	}
+
+	return;
+}
+
+void show_help(char* var,packgen_t* p)
+{
+	pack_gen_usage();
+	
+	destroy_packet_gen(p);
+	
+	exit(0);
+}	
+
+void path_import(char* var,packgen_t* p)
+{
+	if(var && p){
+		strncpy(p->path,var,strlen(var)<PGEN_MAX_PATHNAME_LEN?strlen(var):PGEN_MAX_PATHNAME_LEN);
+	}
+	
+	PP("Path [%s]",p->path);
+}
+
+void numOfPackets_import(char* var,packgen_t* p)
+{
+	long long val = strtol(var,NULL,0);
+	
+	if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+			|| (errno != 0 && val == 0)) {
+		perror("strtol");
+		P_ERROR("Problem while importing packets number");
+		return;
+	}
+	
+	p->packetsNum = val;
+	
+	PP("Num of packets [%llu]",p->packetsNum);
+}
+
+void txInterval_import(char* var,packgen_t* p)
+{
+	long long val = strtol(var,NULL,0);
+	
+	if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+			|| (errno != 0 && val == 0)) {
+		perror("strtol");
+		P_ERROR("Problem while importing packets number");
+		return;
+	}
+	
+	p->tx_interval = val;
+	
+	PP("tx_interval [%llu]",p->tx_interval);
+}
+
+void deviceOut_import(char* var,packgen_t* p)
+{
+	
+	if(var && p){
+		strcpy(p->tx_dev,var);
+	}
+	
+	PP("Device Out [%s]",p->tx_dev);
+}
+
+void deviceIn_import(char* var,packgen_t* p)
+{
+	if(var && p){
+		strcpy(p->rx_dev,var);
+	}
+	
+	PP("Device In [%s]",p->rx_dev);
+}
+
+void deviceDstMac_import(char* var,packgen_t* p)
+{
+	int values[PGEN_ETH_MAC_LEN];
+    
+    if(sscanf(var,"%x:%x:%x:%x:%x:%x" 
+			  ,&values[0],&values[1],&values[2]
+			  ,&values[3],&values[4],&values[5])!=PGEN_ETH_MAC_LEN)
+	{
+        P_ERROR("Failed reading MAC address!");
+		return;
+    }
+    
+	int i=0;
+	/* convert to uint8_t */
+    for( i = 0; i < PGEN_ETH_MAC_LEN; ++i )
+        p->dstmac[i] = (uint8_t) values[i];
+	
+	
+	PP("Destination MAC [%2.x:%2.x:%2.x:%2.x:%2.x:%2.x]"
+													,p->dstmac[0]
+													,p->dstmac[1]
+													,p->dstmac[2]
+													,p->dstmac[3]
+													,p->dstmac[4]
+													,p->dstmac[5]);
+}
+
+void deviceSrcMac_import(char* var,packgen_t* p)
+{
+	int values[PGEN_ETH_MAC_LEN];
+    
+    if(sscanf(var,"%x:%x:%x:%x:%x:%x" 
+			  ,&values[0],&values[1],&values[2]
+			  ,&values[3],&values[4],&values[5])!=PGEN_ETH_MAC_LEN)
+	{
+        P_ERROR("Failed reading MAC address!");
+		return;
+    }
+    
+	int i=0;
+	/* convert to uint8_t */
+    for( i = 0; i < PGEN_ETH_MAC_LEN; ++i )
+        p->srcmac[i] = (uint8_t) values[i];
+	
+	
+	PP("Source MAC [%2.x:%2.x:%2.x:%2.x:%2.x:%2.x]"
+	   ,p->srcmac[0]
+	   ,p->srcmac[1]
+	   ,p->srcmac[2]
+	   ,p->srcmac[3]
+	   ,p->srcmac[4]
+	   ,p->srcmac[5]);
+}
+
+void protocol_import(char* var,packgen_t* p)
+{
+	
+	int values=0;
+    
+    if(sscanf(var,"0x%x",&values)!=1){
+        P_ERROR("Failed reading");
+		return;
+    }
+
+	memcpy(p->proto,&values,2);
+	
+	PP("Proto [0x%2.2x%2.2x]",p->proto[0],p->proto[1]);
+}
+
+int packet_gen_specification_read(int argc, char *argv[],packgen_t* args)
+{
+	P_INFO("---System Initialize---");
+	/*Grab variables from console*/
+	if( ( (argc) < (2 * PGEN_MANDATORY_VAR_NUM) ) || ((argc-1)%2) )
+	{
+		P_INFO("Variable Error....!");
+		
+		pack_gen_usage();
+		
+		goto failure;
+	}else
+	{
+		int i=0,p=0;
+		for(i = 1; i < argc ; i+=2)
+		{
+			for(p=0;p<NUM_OF_PARAMS;p++)
+			{
+				if(strcmp(pgen_var_table[p].var_key,argv[i])==0){
+					pgen_var_table[p].cb(argv[i+1],args);
+					break;
+				}
+			}
+		}
+		
+	}
+
+	
+	return P_SUCCESS;
+
+failure:		
+	
+	return P_FAILURE;
+}
+
+int pack_gen_init_sock(packgen_t* p,uint8_t direction)
+{
+	int s = -1;	int i=0;
+	struct sockaddr_ll	s_addr;
+	struct ifreq		ifr;
+	int ifindex	= 0;
+	char mac[ETH_ALEN];
+	
+	if(!p){
+		P_ERROR("Params");
+		return P_FAILURE;
+	}
+	
+	
+	if( (s = socket(AF_PACKET,SOCK_RAW,htons(ETH_P_ALL)) ) < 0){
+		PP("Socket");
+		return P_FAILURE;
+	}
+	
+	memset(&ifr,0,sizeof(ifr));
+	
+	if(direction == IF_IN){
+		/*Grab interface name.*/
+		strncpy(ifr.ifr_name,(const char*)p->rx_dev,IFNAMSIZ);
+	}else{
+		strncpy(ifr.ifr_name,(const char*)p->tx_dev,IFNAMSIZ);
+	}
+	
+ 	if(ioctl(s,SIOCGIFFLAGS,&ifr) < 0){
+		perror("SIOCGIFFLAGS");
+		goto failure;
+	}
+    
+    /* Check if the interface is active */
+    if(!(ifr.ifr_flags & IFF_UP)){
+        P_INFO("Interface is Down.");
+		goto failure;
+    }
+	
+	if(direction == IF_IN)
+	{
+		/* Set Interface in promiscuous mode. */
+		ifr.ifr_flags |= IFF_PROMISC;
+		if(ioctl(s,SIOCSIFFLAGS,&ifr) < 0){
+			perror("SIOCSIFFLAGS");
+			goto failure;
+		}
+	}
+
+	if(ioctl(s, SIOCGIFINDEX,ifr)<0){	
+		perror("SIOCGIFINDEX");
+		goto failure;
+	}
+	/*Grab interface index from kernel.*/
+	//ifindex = ifr.ifr_ifru.ifru_ivalue
+	ifindex = ifr.ifr_ifindex;
+
+	
+	memset(&s_addr,0,sizeof(s_addr));	
+	s_addr.sll_family 	= PF_PACKET;
+	s_addr.sll_hatype 	= ARPHRD_ETHER;
+	s_addr.sll_halen  	= ETH_ALEN;
+	s_addr.sll_ifindex 	= ifindex;
+	s_addr.sll_pkttype 	= PACKET_OTHERHOST;
+	s_addr.sll_protocol	= htons(ETH_P_ALL);		//must check this variables
+	s_addr.sll_addr[6]	= 0x00;
+	s_addr.sll_addr[7]	= 0x00;
+    /* Bind socket to the interface. */
+    bind(s,(const struct sockaddr *)&s_addr,sizeof(struct sockaddr_ll));
+	
+	/*Grab ingerface's MAC address.*/
+	if(ioctl(s,SIOCGIFHWADDR,&ifr)==-1){
+		perror("SIOCGIFHWADDR");
+		goto failure;
+	}
+
+	memset(mac,0,ETH_ALEN);
+	/* Copy rx interface's MAC address */
+	memcpy(mac,&(ifr.ifr_hwaddr).sa_data,ETH_ALEN);
+
+    PP("/----------------------------------------------/");
+	PP("Socket Desc [%d]",s);
+	if(IF_IN == direction){
+		p->rx_sock = s;
+		PP("The Iface %s",(char*)p->rx_dev);
+		for(i=0;i<ETH_ALEN;i++){
+			p->p_srcmac[i] = (uint8_t)mac[i];
+		}
+		PP("The MAC "MAC_ADDR_S,MAC_ADDR_V(p->p_srcmac));
+	}else{
+		p->tx_sock = s;
+		PP("The Iface %s",(char*)p->tx_dev);
+		for(i=0;i<ETH_ALEN;i++){
+			p->p_dstmac[i] = (uint8_t)mac[i];
+		}
+		PP("The MAC "MAC_ADDR_S,MAC_ADDR_V(p->p_dstmac));
+	}
+    PP("/----------------------------------------------/");
+
+	///* Get settings */
+	//set = fcntl(sockid,F_GETFL, 0);
+	//if(set < 0){
+	//	*error = -__LINE__;
+	//	return -S_CREATE;
+	//}
+
+	///* Set Settings plus NON Blocking flag */
+	//err = fcntl(sockid, F_SETFL, set | O_NONBLOCK);
+	//if(err < 0){
+	//	*error = -__LINE__;
+	//	return -S_CREATE;
+	//}
+	return P_SUCCESS;
+	
+failure:
+	
+	if(s>-1){
+		close(s);
+	}
+	
+	return P_FAILURE;
+	
+}
+
+int packet_gen_start(packgen_t* p)
+{
+	pthread_attr_t 	attr;
+	pthread_t		packgen_rx_thread;
+	pthread_t		packgen_tx_thread;
+	
+	uint32_t*		PackGenStatusRx	=	NULL;
+	uint32_t*		PackGenStatusTx	=	NULL;
+	
+	
+	if(!p){
+		P_ERROR("Params");
+		goto failure;
+	}	
+	
+	_packet = p;
+	
+	
+	if(pack_gen_init_sock(p,IF_IN)<0){
+		PP("Socket initialize failed!");
+		goto failure;
+	}
+	
+	if(pack_gen_init_sock(p,IF_OUT)<0){
+		PP("Socket initialize failed!");
+		goto failure;
+	}
+	
+	
+	/* Set Kill signal. */
+    signal(SIGINT,packet_gen_signal); 	
+	
+
+	///*Pthread init*/
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);	
+	
+	
+	///*Fire up threads*/
+	pthread_create(&packgen_rx_thread,&attr,PackGen_Rx_Thread,(void*)p);
+	pthread_create(&packgen_tx_thread,&attr,PackGen_Tx_Thread,(void*)p);
+	///*Wait to finish the send.*/
+	pthread_join(packgen_rx_thread,(void**)&PackGenStatusRx);
+	pthread_join(packgen_tx_thread,(void**)&PackGenStatusTx);
+	
+	pthread_attr_destroy(&attr);
+	
+	return P_SUCCESS;
+
+failure:
+	return P_FAILURE;
+}
+
+
+
+void packet_gen_udelay(long long microns)
+{
+	if(!microns){
+		return;
+	}
+	
+	/*Delay function with microseconds accuracy*/
+	struct timeval delay;
+	struct timeval target;
+	struct timeval now;
+	delay.tv_sec = 0;
+	delay.tv_usec = microns;
+	while (delay.tv_usec >= 1000000)
+	{
+		delay.tv_sec++;
+		delay.tv_usec -= 1000000;
+	}
+
+	gettimeofday(&now, NULL);
+	timeradd(&now, &delay, &target);
+
+	do {
+		gettimeofday(&now, NULL);
+	} while (timercmp(&now, &target,<));
+
+}
+
+
+void rx_result(packgen_t*p,unsigned long rx_num,packge_time_stats_t* stats,uint16_t size)
+{
+	unsigned long i = 0;
+	/*Receive statistics file open*/
+	char fname_rx_stats  [2*PGEN_MAX_PATHNAME_LEN];
+	char fname_time_stats[2*PGEN_MAX_PATHNAME_LEN];
+	
+	if(!stats || !p)
+		return;
+	
+	
+	memset(fname_rx_stats,0,2*PGEN_MAX_PATHNAME_LEN);
+	memset(fname_time_stats,0,2*PGEN_MAX_PATHNAME_LEN);
+
+
+	if(strcmp(p->path,"./")!=0){
+		snprintf(fname_rx_stats,2*PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_recv_stats.txt",p->path,size);
+	}else{
+		snprintf(fname_rx_stats,2*PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_recv_stats.txt",p->path,size);
+	}
+
+	
+	if(strcmp(p->path,"./")!=0){
+		snprintf(fname_time_stats,2*PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_recv_stats.txt",p->path,size);
+	}else{
+		snprintf(fname_time_stats,2*PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_recv_stats.txt",p->path,size);
+	}
+	
+	
+	p->recv_stats = fopen(fname_rx_stats,"w");
+	if(!p->recv_stats){
+		perror("No File or Bad Directory");
+		goto failure;
+	}
+	
+	
+	p->time_analysis = fopen(fname_time_stats,"w");
+	if(!p->time_analysis){
+		perror("No File or Bad Directory");
+		goto failure;
+	}
+	
+	
+	
+	/*File printing*/
+	fprintf(p->recv_stats,"\nResults From Channel Tester.(Receive)\n");
+	fprintf(p->recv_stats,"Data Size        :\t%u.\n",size);
+	fprintf(p->recv_stats,"Packets Received	:\t%lu.\n",rx_num);
+	
+	
+	
+	fprintf(p->time_analysis,"%%Timining Analysis Report For MATLAB processing!\n\n");
+	
+	unsigned long temp=stats[0].INTERARRIVAL_TIME;
+	
+	fprintf(p->time_analysis,"%lu,%lu,%lu;\r\n",stats[i].ID,(unsigned long)0,(unsigned long)0);
+	for(i = 1; i < rx_num; i++){
+		//if(stats[i].ID!=0x00 && stats[i].INTERARRIVAL_TIME!=0 && stats[i].LATENCY!=0)
+		{
+			temp = stats[i-1].INTERARRIVAL_TIME;
+			fprintf(p->time_analysis,"%lu,%lu,%lu;\r\n",stats[i].ID,stats[i].LATENCY,(stats[i].INTERARRIVAL_TIME-temp));
+			packet_gen_udelay(100);
+		}
+	}
+	fprintf(p->time_analysis,"];\n");
+	
+	
+	/*Close files*/
+	fclose(p->recv_stats);
+	p->recv_stats = NULL;
+	fclose(p->time_analysis);
+	p->time_analysis = NULL;
+	
+	
+	/*Console Printing*/
+	printf("\nResults From Channel Tester.(Receive)\n");
+	printf("Data Size              :\t%u.\n",size);
+	printf("Packets Received       :\t%lu.\n",rx_num);
+	
+failure:
+	return;
+	
+}
+
+
+
+
+
+
+#if 0
+int memory_allocate(){
+	/*Path name to create*/
+	//path						=(char*)		 malloc(MAX_FILE_NAME*sizeof(char));
+	//free_path=path;
+	/*File names*/
+	fname_send_stats			=(char*)   	 	 malloc(PGEN_MAX_PATHNAME_LEN*sizeof(char));
+	fname_recv_stats			=(char*)		 malloc(PGEN_MAX_PATHNAME_LEN*sizeof(char));
+	fname_time_analysis			=(char*)		 malloc(PGEN_MAX_PATHNAME_LEN*sizeof(char));
+	/*Thread structures*/
+	Transmitter					=(ThreadArg*)	 malloc(sizeof(ThreadArg));
+	Receiver					=(RcvArg*)		 malloc(sizeof(RcvArg));
+	Transmitter->dst_mac		=(unsigned char*)malloc(sizeof(unsigned char)*ETH_MAC_LEN);
+	
+	if(
+		fname_send_stats && 
+		fname_recv_stats && 
+		fname_time_analysis && 
+		Transmitter	&&
+		Receiver &&
+		Transmitter->dst_mac){
+		return 0;
+	}
+	
+	
+	return -1;
+}
+
 
 int mac_import(char *input,unsigned char *OUT)
 {
@@ -150,31 +651,24 @@ int mac_import(char *input,unsigned char *OUT)
 	return 0; /*Success Code*/
 }
 
-void sigint(int signum){
-	/*Application Kill CleanUp Function.*/
-	printf("Caught signal %d\n",signum);
-	/*Cancel Threads*/
-	pthread_cancel(Transmitter_thr);
-	pthread_join(Transmitter_thr,statusTR);
-	pthread_cancel(Receiver_thr);
-	pthread_join(Receiver_thr,statusRC);
-	printf("Packets transmitted	: %8i.\n",sent);
-	printf("Packets received	: %8i.\n",rec);
-	printf("\nPacket Generator terminated By User....\n");
-	exit(1);
-}
+
+
+
 
 void finish(){
 	/*Normally Finish CleanUp Function.*/
-	printf("\nPacket Generator Finished Normally...\n");
-	free(fname_send_stats);
-	free(fname_recv_stats);
-	free(fname_time_analysis);
-	free(Transmitter->dst_mac);
-	free(Transmitter);
-	free(Receiver);
-	free(Array);
-	free(free_path);
+	P_INFO("Terminate Packet Generator");
+#define F_FREE(m) if(m!=NULL){free(m);}
+	
+	F_FREE(fname_send_stats);
+	F_FREE(fname_recv_stats);
+	F_FREE(fname_time_analysis);
+	F_FREE(Transmitter->dst_mac);
+	F_FREE(Transmitter);
+	F_FREE(Receiver);
+	F_FREE(Array);
+	F_FREE(free_path);
+	
 	pthread_attr_destroy(&attr);
 	return;
 }
@@ -289,27 +783,7 @@ void byte2time(uint8_t* input, struct timeval *output){
 	return;
 }
 
-void udelay(long microns){
-	/*Delay function with microseconds accuracy*/
-	struct timeval delay;
-	struct timeval target;
-	struct timeval now;
-	delay.tv_sec = 0;
-	delay.tv_usec = microns;
-	while (delay.tv_usec >= 1000000)
-	{
-		delay.tv_sec++;
-		delay.tv_usec -= 1000000;
-	}
 
-	gettimeofday(&now, NULL);
-	timeradd(&now, &delay, &target);
-
-	do {
-		gettimeofday(&now, NULL);
-	} while (timercmp(&now, &target,<));
-
-}
 
 void rx_result(char **rx_path,int rec,int rx_sock,int loop, int size)
 {
@@ -435,3 +909,52 @@ void netinit_receiver(mynet *receiver){
 #endif
 
 }
+
+
+#endif
+
+////#include <stdlib.h>
+////#include <limits.h>
+////#include <stdio.h>
+////#include <errno.h>
+
+//int
+//str_lmain(int argc, char *argv[])
+//{
+//	int base;
+//	char *endptr, *str;
+//	long val;
+
+//	if (argc < 2) {
+//		fprintf(stderr, "Usage: %s str [base]\n", argv[0]);
+//		exit(EXIT_FAILURE);
+//	}
+
+//	str = argv[1];
+//	base = (argc > 2) ? atoi(argv[2]) : 10;
+
+//	errno = 0;    /* To distinguish success/failure after call */
+//	val = strtol(str, &endptr, base);
+
+//	/* Check for various possible errors */
+
+//	if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+//			|| (errno != 0 && val == 0)) {
+//		perror("strtol");
+//		exit(EXIT_FAILURE);
+//	}
+
+//	if (endptr == str) {
+//		fprintf(stderr, "No digits were found\n");
+//		exit(EXIT_FAILURE);
+//	}
+
+//	/* If we got here, strtol() successfully parsed a number */
+
+//	printf("strtol() returned %ld\n", val);
+
+//	if (*endptr != '\0')        /* Not necessarily an error... */
+//		printf("Further characters after number: %s\n", endptr);
+
+//	exit(EXIT_SUCCESS);
+//}

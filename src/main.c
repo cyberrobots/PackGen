@@ -51,25 +51,45 @@
 /*Main functions*/
 int main(int argc, char *argv[])
 {
+	
+	pid_t process = getpid();
+	
+	P_INFO("\n***Starting The Generator [%d] ***\n",process);
 
     // Check user id, if not sudo exit.
-    if(getuid()!=0)
-    {
-        printf("You should have [root] permissions, try running 'sudo PacketGenerator'\r\n");
-        return 1;
-    }
+    //if(getuid()!=0){
+    //    P_INFO("Root access required!");
+    //    exit(0);
+    //}
+	
+	
+	
+	packgen_t* packgen = new_packet_gen();
+	if(!packgen){
+		P_INFO("Init failed!");
+		goto failure;
+	}
 
-	printf("\n***Starting The Generator***\n");
-
-	/*Pthread init*/
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-	//Allocate memory for the system.
-    memory_allocate(); 				
 	//Print systems specification.
-    specification_print(argc,argv);	
-	//Set the signal.
-    signal(SIGINT,sigint); 			
+    if(packet_gen_specification_read(argc,argv,packgen)<0){
+		P_ERROR("Parameters");
+		goto failure;
+	}
+	
+	
+	if(packet_gen_start(packgen)<0){
+		P_ERROR("Packet Generator Failed.....");
+		goto failure;
+	}
+	
+	//while(1){
+	//	sleep(10000);
+	//}
+	
+#if 0
+
+	
+
 	int i;
 	for(i=0;i<NUM_OF_STREAMS;i++)
     {
@@ -84,7 +104,13 @@ int main(int argc, char *argv[])
 		pthread_join(Receiver_thr,statusRC);
 		Transmitter->delay=Transmitter->delay+STREAM_INTERVAL;
 	}
-	/*Memory cleanup function*/
-	finish();
-	return 0;
+
+	
+#endif
+	
+failure:
+
+	destroy_packet_gen(packgen);
+	
+	exit(EXIT_SUCCESS);
 }

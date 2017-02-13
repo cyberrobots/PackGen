@@ -18,6 +18,9 @@
 #include <sys/dir.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <limits.h>
+#include <stdio.h>
+#include <errno.h>
 /*Common C*/
 #include <time.h>
 #include <math.h>

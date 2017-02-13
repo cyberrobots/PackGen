@@ -11,9 +11,114 @@
 #include "variables.h"
 #include "functions.h"
 
+
+
+void* PackGen_Rx_Thread(void* args)
+{
+	packgen_t* p = (packgen_t*)args;
+	uint8_t tx_buff[PGEN_ETH_FRAME];
+	uint16_t indx	= 0;
+
+	struct timeval	timediff0;
+	struct timeval	timediff1;
+	unsigned long 	PacketsReceived	= 0;
+	packge_time_stats_t* packStats	= NULL;
+	
+	
+	memset(&tx_buff[indx],0,PGEN_ETH_FRAME);
+	
+	if(p->packetsNum < 10000000){
+		//Enable Log
+		packStats = malloc(p->packetsNum * sizeof(packge_time_stats_t));
+		if(!packStats){
+			goto failure;
+		}
+		memset(packStats,0,p->packetsNum * sizeof(packge_time_stats_t));
+	}
+	
+	
+	
+	do
+	{
+		recv(p->rx_sock,tx_buff,PGEN_ETH_FRAME,0);
+		gettimeofday(&timediff0,NULL);
+		if(memcmp(&tx_buff[12],p->proto,2)==0){
+			
+			byte2time(&tx_buff[14],&timediff1);
+			memmove(&packStats[PacketsReceived].ID,&tx_buff[30],sizeof(unsigned long));
+			
+			
+			packStats[PacketsReceived].LATENCY = 
+				(((timediff0.tv_sec-timediff1.tv_sec)*1000000)+(timediff0.tv_usec-timediff1.tv_usec));
+			packStats[PacketsReceived].INTERARRIVAL_TIME = 
+				((timediff0.tv_sec*1000000)+timediff0.tv_usec);
+			
+			timediff1.tv_sec	= 0;
+			timediff1.tv_usec	= 0;
+			
+			PacketsReceived++;
+			
+			//PP("Packet Received[%lu]",PacketsReceived);
+		}
+
+	}while(PacketsReceived < p->packetsNum-100);
+	
+	
+	PP("Packet Received[%lu]",PacketsReceived);
+	
+	if(p->packetsNum < 10000000){
+		rx_result(p,PacketsReceived,packStats,PGEN_ETH_FRAME);
+	}
+
+failure:
+	if(packStats){
+		free(packStats);
+	}
+	
+	
+	pthread_exit(NULL);
+	return NULL;
+}
+
+
+
+void byte2time(uint8_t* input, struct timeval *output){
+	/*Reversing the time2byte in order to calculate travel time.*/
+
+	output->tv_sec	=	*(input);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+1);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+2);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+3);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+4);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+5);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+6);
+	output->tv_sec	=	(output->tv_sec<<4)	|*(input+7);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+8);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+9);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+10);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+11);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+12);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+13);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+14);
+	output->tv_usec	=	(output->tv_usec<<4)|*(input+15);
+	
+	return;
+}
+
+
+
+
+
+
+
+
+
+#if 0
+
 #define NOWRITE
 
 void *receiver(void *arg_rec){
+#define BUF_SIZE	(1518)
 	printf("****In Receiver thread.****\n");
 	int type,state;
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
@@ -50,6 +155,7 @@ void *receiver(void *arg_rec){
 	/*Initialize Receiver Function.*/
 	netinit_receiver(receiver);
 	rec=0;
+
 	while(control){
 		recvfrom(receiver->sock,inbuffer,BUF_SIZE,0,NULL,NULL);
 		gettimeofday(timediff0,NULL);
@@ -93,3 +199,5 @@ void rx_cleanup_handler(void *arg){
 	free(in_rx_handler->timer1);
 	printf("\n____Inside RX CleaUp Handler____\n\n");
 }
+
+#endif

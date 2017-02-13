@@ -12,7 +12,126 @@
 #include "functions.h"
 
 
+
+
+void* PackGen_Tx_Thread(void* args)
+{
+	packgen_t* p = (packgen_t*)args;
+	uint8_t tx_buff[PGEN_ETH_FRAME];
+	uint16_t indx	= 0;
+	struct timeval timeStamp;
+	
+	unsigned long 	PacketsSent	= 0;
+
+	memset(&tx_buff[indx],0xDE,PGEN_ETH_FRAME);
+	
+	//Generators Tx interface MAC address
+	memcpy(&tx_buff[indx],p->p_srcmac,PGEN_ETH_MAC_LEN);
+	indx+=PGEN_ETH_MAC_LEN;
+	//Target's Rx interface MAC addres
+	memcpy(&tx_buff[indx],p->dstmac,PGEN_ETH_MAC_LEN);
+	indx+=PGEN_ETH_MAC_LEN;
+	memcpy(&tx_buff[indx],p->proto,PGEN_ETH_PROTO_LEN);
+	indx+=PGEN_ETH_PROTO_LEN;
+	
+	PP("HeaderSize [%d]",indx);
+	PP("Proto [%2.2x%2.2x]",p->proto[0],p->proto[1]);
+	PP("MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_srcmac));
+	PP("MAC:"MAC_ADDR_S,MAC_ADDR_V(p->dstmac));
+	
+	
+	uint8_t* timeStampNeedle = &tx_buff[indx];
+	
+	indx+=16;
+	
+	uint8_t* labelNeedle 	= &tx_buff[indx];
+	
+	indx+=sizeof(unsigned long);
+	
+	do
+	{
+		gettimeofday(&timeStamp,NULL);
+		time2byte(&timeStamp,timeStampNeedle);
+		label2packet(&PacketsSent,labelNeedle);
+		send(p->tx_sock,tx_buff,p->packetSize,0);
+		packet_gen_udelay(p->tx_interval);
+		
+		PacketsSent++;
+	}while(PacketsSent<=p->packetsNum);
+
+	pthread_exit(NULL);
+	return NULL;
+}
+
+
+
+
+
+
+void time2byte(struct timeval *input, uint8_t* output){
+	/*Convert time stamp to byte ordering for placing on the packet.*/
+	
+	*(output+15)	=(input->tv_usec&0x0000F);
+	*(output+14)	=(input->tv_usec&0x000F0)>>4;
+	*(output+13)	=(input->tv_usec&0x00F00)>>8;
+	*(output+12)	=(input->tv_usec&0x0F000)>>12;
+	*(output+11)	=(input->tv_usec&0xF0000)>>16;
+	*(output+10)	=(input->tv_usec&0xF0000)>>20;
+	*(output+9)		=(input->tv_usec&0xF0000)>>24;
+	*(output+8)		=(input->tv_usec&0xF0000)>>28;
+	*(output+7)		=(input->tv_sec&0x0000000F);
+	*(output+6)		=(input->tv_sec&0x000000F0)>>4;
+	*(output+5)		=(input->tv_sec&0x00000F00)>>8;
+	*(output+4)		=(input->tv_sec&0x0000F000)>>12;
+	*(output+3)		=(input->tv_sec&0x000F0000)>>16;
+	*(output+2)		=(input->tv_sec&0x00F00000)>>20;
+	*(output+1)		=(input->tv_sec&0x0F000000)>>24;
+	*(output+0)		=(input->tv_sec&0xF0000000)>>28;
+	
+	return;
+}
+
+
+
+
+void label2packet(unsigned long* label,uint8_t* buffer){
+	
+	memmove(buffer,label,sizeof(unsigned long));
+	return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+
 void *transmitter(void *arg){
+#define BUF_SIZE	(1518)
+#define ETH_HEADER_LEN (14)
 	int type,state;
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&state);
@@ -81,3 +200,4 @@ void tx_cleanup_handler(void *arg){
 
 }
 
+#endif

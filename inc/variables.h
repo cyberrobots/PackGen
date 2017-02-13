@@ -10,12 +10,139 @@
 #ifndef VARIABLES_H_
 #define VARIABLES_H_
 
+#ifdef DEBUG
+#define PP(m,...) 		do{fprintf(stdout,"[%s][%d]"m"\r\n",__func__,__LINE__,##__VA_ARGS__);}while(0);
+#define P_INFO(m,...) 	do{fprintf(stdout,"[INFO]"m"\r\n",##__VA_ARGS__);}while(0);
+#define P_ERROR(m,...) 	do{fprintf(stderr,"[ERROR]"m"\r\n",##__VA_ARGS__);}while(0);
+#else
+#define PP(m,...) ;
+#define P_INFO(m,...) 	do{fprintf(stdout,"[INFO]"m"\r\n",__func__,__LINE__,##__VA_ARGS__);}while(0);
+#define P_ERROR(m,...) ;
+#endif
+
+
+#define P_SUCCESS	( 0)
+#define P_FAILURE	(-1)
+
+
+/* Defines for configurations variables */
+#define PGEN_MANDATORY_VAR_NUM	(2)
+#define PGEN_MAX_VAR_NUM	 	(8)
+#define PGEN_MAX_PATHNAME_LEN	(64)
+
 /*Basic Defines for Network Interface*/
-#define ETH_HEADER_LEN	ETH_HLEN	/*Total octets in header.*/
-#define BUF_SIZE		1518
-#define ETH_FRAME_		TOTALLEN	1518
-#define ETH_MAC_LEN		ETH_ALEN
-#define ETH_P_NULL		0x0808 /*Packet Protocol, self defined/don't care.*/
+#define PGEN_ETH_HEADER_LEN		ETH_HLEN	/*Total octets in header.*/
+#define PGEN_ETH_FRAME			ETH_FRAME_LEN
+#define PGEN_ETH_PROTO_LEN 		(PGEN_ETH_HEADER_LEN - (2 * PGEN_ETH_MAC_LEN))
+#define PGEN_ETH_MAC_LEN		ETH_ALEN
+#define ETH_P_NULL				0x0808 /*Packet Protocol, self defined/don't care.*/
+
+#define MAC_ADDR_S		"[%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x]"
+#define MAC_ADDR_V(s)	s[0],s[1],s[2],s[3],s[4],s[5]
+
+
+
+/*==============================================
+.________.						   .________.
+|        |p_srcmac			dstmac |		|
+|  pgen  |------------------------>| target	|
+|        |<------------------------|		|
+|________|p_dstmac			srcmac |________|
+===============================================*/
+
+typedef struct
+{
+	char				tx_dev[IFNAMSIZ];
+	char				rx_dev[IFNAMSIZ];
+	char				path  [PGEN_MAX_PATHNAME_LEN];
+	long long			tx_interval;
+	long long			packetsNum;
+	uint16_t			packetSize;
+	/* Header Parameters */
+	uint8_t				p_srcmac[PGEN_ETH_MAC_LEN];	/* p_gen  tx mac */
+	uint8_t				p_dstmac[PGEN_ETH_MAC_LEN]; /* p_gen  rx mac */
+	uint8_t				srcmac	[PGEN_ETH_MAC_LEN]; /* target tx mac */
+	uint8_t				dstmac	[PGEN_ETH_MAC_LEN]; /* target rx mac */
+	uint8_t				proto 	[PGEN_ETH_PROTO_LEN];
+	/* Socket descriptors 	*/
+	int					tx_sock;
+	int					rx_sock;
+	/* Output Files 		*/
+	FILE*				send_stats;
+	FILE*				recv_stats;
+	FILE*				time_analysis;
+}packgen_t;
+
+
+typedef  void (*pgen_variable_func_t)(char* variable,packgen_t* p);
+
+typedef struct 
+{
+	char						*var_key;
+	pgen_variable_func_t		cb;
+	char						*comment;
+}pgen_variable_t;
+
+typedef enum{
+	IF_IN 	= 0,
+	IF_OUT	= 1,
+}packgen_direction_t;
+
+
+typedef struct{
+	unsigned long	ID;
+	unsigned long	LATENCY;
+	unsigned long	INTERARRIVAL_TIME;
+}packge_time_stats_t;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*Depending you distro you must put here the proper interface name.*/
 //#define DEVICE			"p5p1" /*Interface_1*/
@@ -81,10 +208,10 @@ extern unsigned char	*DEVICE2;
 extern unsigned char	src_mac_rec[6];
 extern ThreadArg		*Transmitter;
 extern RcvArg			*Receiver;
-extern unsigned int	NUM_OF_PACKETS;
+extern unsigned long long	NUM_OF_PACKETS;
 extern unsigned int	STARTING_DELAY;
 extern unsigned int	STREAM_INTERVAL;
-extern uint8_t			control;
+extern volatile uint8_t			control;
 
 /*Packet Counters*/
 extern unsigned int	sent;
@@ -110,7 +237,7 @@ extern FILE	*send_stats;
 extern FILE	*recv_stats;
 extern FILE	*time_analysis;
 /*Strings for files labeling*/
-extern char	*path;
+extern char	path[PGEN_MAX_PATHNAME_LEN];
 extern char	*free_path;
 extern char	*fname_send_stats;
 extern char	*fname_recv_stats;
