@@ -1,10 +1,10 @@
 /*
- * realtester_time_v02.c
+ * main.c
  *
  *  Created on	: Jul 4, 2013
- *  Finished on	: Jul 10 2013
+ *  Finished on	: Feb 2017
  *  Author		: Sotiris Lyras
- *  Version		: v04
+ *  Version		: v05
  */
 
 /* --------------------------------------------------
