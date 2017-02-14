@@ -487,6 +487,8 @@ int packet_gen_start(packgen_t* p)
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
 	
+	P_INFO("---Packet Generator Start---");
+	
 	//CPU_ZERO(&cpuset);
 	//CPU_SET(0, &cpuset);
 	//pthread_setaffinity_np(packgen_rx_thread, sizeof(cpu_set_t), &cpuset);
@@ -504,6 +506,8 @@ int packet_gen_start(packgen_t* p)
 	pthread_join(packgen_tx_thread,(void**)&PackGenStatusTx);
 	
 	pthread_attr_destroy(&attr);
+	
+	P_INFO("---Packet Generator Finish---");
 	
 	return P_SUCCESS;
 

@@ -21,28 +21,7 @@
  * Jitter and Packet Delay Variation (PDV).
  * --------------------------------------------------
  * --------------------------------------------------
- * Imports (Mandatory).
- * --------------------------------------------------
- * In order to execute you must provide the following:
- * --------------------------------------------------
- * 1)	Path name to store files in.
- * 2)	Number of streams user would like to produce.
- * 3)	The size of packets user would like to send.
- * 4)	The delay (in uSec) packets should have between them.(fix the rate (PPS)).
- * 5)	The delay (in uSec) interval which is going to be added in each stream,
- * 		if the user wants different delay for each stream.
- * 6)	The time interval (in Seconds) between two streams.
- * 7)	Interface for receiving traffic.
- * 8)	Interface for sending traffic.
- * 9)	MAC address for the target machine. Format: "xx:xx:xx:xx:xx:xx".
- * --------------------------------------------------
- * Exports.
- * 1)	stream characteristics *_send_stats.txt
- * 2)	stream characteristic  *_recv_stats.txt
- * 3)	stream characteristic  *_time_analysis.txt
- * --------------------------------------------------
- * Example:
- * sudo gdb --args ./PacketGenerator ./export 1 1400 1000000 100 100 100 eth0 eth1 00:24:1d:12:40:d1
+ * sudo ./PacketGenerator devout enx00116b67376c devin enp0s25 dstmac 00:11:6b:67:37:6c proto 0x0808 num 1000000 inter 100 write 1
  */
 /*Libraries*/
 #include "libraries.h"
