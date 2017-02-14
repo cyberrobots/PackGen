@@ -2,21 +2,21 @@
  * thread_receive.c
  *
  *  Created on	: Jul 4, 2013
- *  Finished on	: Jul 10 2013
+ *  Finished on	: Feb 2017
  *  Author		: Sotiris Lyras
- *  Version		: v04
+ *  Version		: v05
  */
 
 #include "libraries.h"
 #include "variables.h"
 #include "functions.h"
 
-
+static inline void byte2time(uint8_t* input, struct timeval *output);
 
 void* PackGen_Rx_Thread(void* args)
 {
 	packgen_t* p = (packgen_t*)args;
-	uint8_t tx_buff[PGEN_ETH_FRAME];
+	uint8_t tx_buff[p->packetSize];
 	uint16_t indx	= 0;
 
 	struct timeval	timediff0;
@@ -24,10 +24,11 @@ void* PackGen_Rx_Thread(void* args)
 	unsigned long 	PacketsReceived	= 0;
 	packge_time_stats_t* packStats	= NULL;
 	
+	struct pollfd ufd;
 	
-	memset(&tx_buff[indx],0,PGEN_ETH_FRAME);
+	memset(&tx_buff[indx],0,p->packetSize);
 	
-	if(p->packetsNum < 10000000){
+	if(p->WriteRxData){
 		//Enable Log
 		packStats = malloc(p->packetsNum * sizeof(packge_time_stats_t));
 		if(!packStats){
@@ -36,38 +37,94 @@ void* PackGen_Rx_Thread(void* args)
 		memset(packStats,0,p->packetsNum * sizeof(packge_time_stats_t));
 	}
 	
+	ufd.fd = p->rx_sock;
+	ufd.events = POLLIN|POLLPRI; // check for just normal data
+	int ret = 0;
 	
 	
-	do
+	while(1)
 	{
-		recv(p->rx_sock,tx_buff,PGEN_ETH_FRAME,0);
-		gettimeofday(&timediff0,NULL);
+#if 0		
+		recvfrom(p->rx_sock,tx_buff,PGEN_ETH_FRAME,0,NULL,NULL);
 		if(memcmp(&tx_buff[12],p->proto,2)==0){
-			
-			byte2time(&tx_buff[14],&timediff1);
-			memmove(&packStats[PacketsReceived].ID,&tx_buff[30],sizeof(unsigned long));
-			
-			
-			packStats[PacketsReceived].LATENCY = 
-				(((timediff0.tv_sec-timediff1.tv_sec)*1000000)+(timediff0.tv_usec-timediff1.tv_usec));
-			packStats[PacketsReceived].INTERARRIVAL_TIME = 
-				((timediff0.tv_sec*1000000)+timediff0.tv_usec);
-			
-			timediff1.tv_sec	= 0;
-			timediff1.tv_usec	= 0;
-			
-			PacketsReceived++;
-			
-			//PP("Packet Received[%lu]",PacketsReceived);
-		}
 
-	}while(PacketsReceived < p->packetsNum-100);
+			memset(tx_buff,0,PGEN_ETH_FRAME);
+			PacketsReceived++;
+			PP("Packet Received[%lu]",PacketsReceived);
+			if(PacketsReceived ==  p->packetsNum)
+				break;
+		}
+#else		
+		ret =  poll(&ufd,1,3500);
+		switch(ret)
+		{
+			case -1:
+				perror("Pollin Error");
+				PP("Error");
+				goto failure;
+				break;
+			case 0:
+				PP("Timeout, so far received[%lu]",PacketsReceived);
+				goto normalOut;
+				break;
+			default:
+				if (ufd.revents & POLLIN) 
+				{
+					//recvfrom(p->rx_sock,tx_buff,PGEN_ETH_FRAME,0,NULL,NULL);
+					recv(p->rx_sock, tx_buff,p->packetSize, 0); // receive normal data
+					gettimeofday(&timediff0,NULL);
+					if(memcmp(&tx_buff[12],p->proto,2)==0)
+					{
+						if(p->WriteRxData==1)
+						{
+							byte2time(&tx_buff[14],&timediff1);
+							memmove(&packStats[PacketsReceived].ID,&tx_buff[30],sizeof(unsigned long));
+							
+							// Latency
+							packStats[PacketsReceived].LATENCY = 
+								(((timediff0.tv_sec-timediff1.tv_sec)*1000000)+(timediff0.tv_usec-timediff1.tv_usec));
+							
+							// Interarrival Delay
+							packStats[PacketsReceived].INTERARRIVAL_TIME = 
+								((timediff0.tv_sec*1000000)+timediff0.tv_usec);
+							
+							timediff1.tv_sec	= 0;
+							timediff1.tv_usec	= 0;
+						}
+						
+						PacketsReceived++;
+						
+						if(PacketsReceived == p->packetsNum){
+							goto normalOut;
+						}
+						
+						//PP("Packet Received[%lu]",PacketsReceived);
+					}
+				}
+			break;
+		}
+#endif	
+		
+	}
 	
+normalOut:	
 	
-	PP("Packet Received[%lu]",PacketsReceived);
-	
-	if(p->packetsNum < 10000000){
-		rx_result(p,PacketsReceived,packStats,PGEN_ETH_FRAME);
+	if(p->WriteRxData){
+		packet_gen_write_rx_result(p,PacketsReceived,packStats,PGEN_ETH_FRAME);
+	}else{
+		P_INFO("\nResults From Channel Tester.(Receive)");
+		P_INFO("Write to file          :%s.",p->WriteRxData==1?"Yes":"No");
+		P_INFO("Frame Size             :%u.",p->packetSize);
+		P_INFO("Packets Received       :%lu.",PacketsReceived);
+		P_INFO("Packets Sent           :%lu.",p->packetsNum);
+		P_INFO("Tx interval            :%lu.",p->tx_interval);
+		P_INFO("Protocol               :0x%2.2X%2.2X.",p->proto[0],p->proto[1]);
+		P_INFO("Tx dev                 :%s.",p->tx_dev);
+		P_INFO("Tx dev MAC             :"MAC_ADDR_S".",MAC_ADDR_V(p->p_srcmac));
+		P_INFO("Rx dev                 :%s.",p->rx_dev);
+		P_INFO("Rx dev MAC             :"MAC_ADDR_S".",MAC_ADDR_V(p->p_dstmac));
+		P_INFO("Target's Rx dev MAC    :"MAC_ADDR_S".",MAC_ADDR_V(p->dstmac));
+		P_INFO("Target's Tx dev MAC    :"MAC_ADDR_S".",MAC_ADDR_V(p->srcmac));
 	}
 
 failure:
@@ -82,7 +139,8 @@ failure:
 
 
 
-void byte2time(uint8_t* input, struct timeval *output){
+static inline void byte2time(uint8_t* input, struct timeval *output)
+{
 	/*Reversing the time2byte in order to calculate travel time.*/
 
 	output->tv_sec	=	*(input);
@@ -104,100 +162,3 @@ void byte2time(uint8_t* input, struct timeval *output){
 	
 	return;
 }
-
-
-
-
-
-
-
-
-
-#if 0
-
-#define NOWRITE
-
-void *receiver(void *arg_rec){
-#define BUF_SIZE	(1518)
-	printf("****In Receiver thread.****\n");
-	int type,state;
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &type);
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&state);
-	RcvArg *inrcv	=(RcvArg*)malloc(sizeof(RcvArg));
-	mynet *receiver	=(mynet*)malloc(sizeof(mynet));
-	void *inbuffer	=(uint8_t*)malloc(BUF_SIZE*sizeof(uint8_t));
-	struct timeval	*timediff0;
-	struct timeval	*timediff1;
-	uint8_t			*timer; //Points the packets time stamp.
-	uint8_t 		*label; //Points the packets label id stamp.
-	rec_handler rx_handler;
-	/*Time structures*/
-	timediff0=malloc(sizeof(struct timeval)); // The present time.
-	timediff0->tv_sec=0;
-	timediff0->tv_usec=0;
-	timediff1=malloc(sizeof(struct timeval)); // Packets departure time.
-	timediff1->tv_sec=0;
-	timediff1->tv_usec=0;
-	unsigned char *recetherhead;
-	recetherhead=(uint8_t*)inbuffer;
-	/*Pointers for time and label.*/
-	timer=recetherhead+14;
-	label=recetherhead+32;
-	receiver->eh=(struct ethhdr*)recetherhead;
-	/*Copy locally thread variables.*/
-	memmove(inrcv,arg_rec,sizeof(RcvArg));
-	rx_handler.inbuffer=inbuffer;
-	rx_handler.inrcv=inrcv;
-	rx_handler.receiver=receiver;
-	rx_handler.timer0=timediff0;
-	rx_handler.timer1=timediff1;
-	pthread_cleanup_push(rx_cleanup_handler,(void*)&rx_handler);
-	/*Initialize Receiver Function.*/
-	netinit_receiver(receiver);
-	rec=0;
-
-	while(control){
-		recvfrom(receiver->sock,inbuffer,BUF_SIZE,0,NULL,NULL);
-		gettimeofday(timediff0,NULL);
-		if (receiver->eh->h_proto == ETH_P_NULL && memcmp( (const void*)receiver->eh->h_dest,(const void*)src_mac_rec,ETH_MAC_LEN) == 0)
-		{
-			/*Convert bytes to time.*/
-			byte2time(timer,timediff1);
-			memmove(&Array[rec].ID,label,sizeof(unsigned int));
-			Array[rec].LATENCY=(((timediff0->tv_sec-timediff1->tv_sec)*1000000)+(timediff0->tv_usec-timediff1->tv_usec));
-			Array[rec].INTERARRIVAL_TIME=((timediff0->tv_sec*1000000)+timediff0->tv_usec);
-			//Received Counter.
-			rec++;
-			timediff1->tv_sec=0;
-			timediff1->tv_usec=0;
-		}
-		else{
-			;
-		}
-	}
-	printf("\nReceiver Thread Exiting Received:       %8i \n",rec);
-	printf("***Receiver Thread Exiting***\n");
-#ifdef WRITE
-	/*Write output file function.*/
-	rx_result(inrcv->path,rec,receiver->sock,inrcv->loop,inrcv->size);
-#endif
-#ifdef NOWRITE
-	sleep(2);
-#endif
-	pthread_cleanup_pop(1);
-	pthread_exit(NULL);
-	return NULL;
-}
-
-void rx_cleanup_handler(void *arg){
-	rec_handler *in_rx_handler=(rec_handler*)arg;
-	close(in_rx_handler->receiver->sock);
-	free(in_rx_handler->inrcv);
-	free(in_rx_handler->inbuffer);
-	free(in_rx_handler->receiver);
-	free(in_rx_handler->timer0);
-	free(in_rx_handler->timer1);
-	printf("\n____Inside RX CleaUp Handler____\n\n");
-}
-
-#endif

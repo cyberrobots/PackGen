@@ -2,9 +2,9 @@
  * variables.h
  *
  *  Created on	: Jul 4, 2013
- *  Finished on	: Jul 10 2013
+ *  Finished on	: Feb 2017
  *  Author		: Sotiris Lyras
- *  Version		: v04
+ *  Version		: v05
  */
 
 #ifndef VARIABLES_H_
@@ -16,7 +16,7 @@
 #define P_ERROR(m,...) 	do{fprintf(stderr,"[ERROR]"m"\r\n",##__VA_ARGS__);}while(0);
 #else
 #define PP(m,...) ;
-#define P_INFO(m,...) 	do{fprintf(stdout,"[INFO]"m"\r\n",__func__,__LINE__,##__VA_ARGS__);}while(0);
+#define P_INFO(m,...) 	do{fprintf(stdout,"[INFO]"m"\r\n",##__VA_ARGS__);}while(0);
 #define P_ERROR(m,...) ;
 #endif
 
@@ -35,7 +35,7 @@
 #define PGEN_ETH_FRAME			ETH_FRAME_LEN
 #define PGEN_ETH_PROTO_LEN 		(PGEN_ETH_HEADER_LEN - (2 * PGEN_ETH_MAC_LEN))
 #define PGEN_ETH_MAC_LEN		ETH_ALEN
-#define ETH_P_NULL				0x0808 /*Packet Protocol, self defined/don't care.*/
+//#define ETH_P_NULL				0x0808 /*Packet Protocol, self defined/don't care.*/
 
 #define MAC_ADDR_S		"[%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x]"
 #define MAC_ADDR_V(s)	s[0],s[1],s[2],s[3],s[4],s[5]
@@ -55,8 +55,8 @@ typedef struct
 	char				tx_dev[IFNAMSIZ];
 	char				rx_dev[IFNAMSIZ];
 	char				path  [PGEN_MAX_PATHNAME_LEN];
-	long long			tx_interval;
-	long long			packetsNum;
+	unsigned long		tx_interval;
+	unsigned long   	packetsNum;
 	uint16_t			packetSize;
 	/* Header Parameters */
 	uint8_t				p_srcmac[PGEN_ETH_MAC_LEN];	/* p_gen  tx mac */
@@ -67,10 +67,7 @@ typedef struct
 	/* Socket descriptors 	*/
 	int					tx_sock;
 	int					rx_sock;
-	/* Output Files 		*/
-	FILE*				send_stats;
-	FILE*				recv_stats;
-	FILE*				time_analysis;
+	int					WriteRxData;
 }packgen_t;
 
 

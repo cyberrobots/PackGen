@@ -3,7 +3,7 @@
 
 CC          = gcc
 LD          = gcc
-CFLAGS      = -g -O0 -Wall -DWRITE -DDEBUG
+CFLAGS      = -g -O3 -Wall -Werror
 LDFLAGS     = -lpthread -lrt -lm 
 
 OUTPUTFILE	= PacketGenerator

@@ -81,36 +81,10 @@ int main(int argc, char *argv[])
 		P_ERROR("Packet Generator Failed.....");
 		goto failure;
 	}
-	
-	//while(1){
-	//	sleep(10000);
-	//}
-	
-#if 0
 
-	
-
-	int i;
-	for(i=0;i<NUM_OF_STREAMS;i++)
-    {
-		Transmitter->loop=i;
-		Receiver->loop=i;
-		control=1;
-		/*Fire up threads*/
-		pthread_create(&Receiver_thr,   &attr,receiver,Receiver);
-		pthread_create(&Transmitter_thr,&attr,transmitter,Transmitter);
-		/*Wait to finish the send.*/
-		pthread_join(Transmitter_thr,statusTR);
-		pthread_join(Receiver_thr,statusRC);
-		Transmitter->delay=Transmitter->delay+STREAM_INTERVAL;
-	}
-
-	
-#endif
-	
 failure:
 
-	destroy_packet_gen(packgen);
+	packet_gen_destroy(packgen);
 	
 	exit(EXIT_SUCCESS);
 }

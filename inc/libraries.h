@@ -9,6 +9,7 @@
 
 #ifndef LIBRARIES_H_
 #define LIBRARIES_H_
+#define _GNU_SOURCE
 /*System Includes*/
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -21,6 +22,11 @@
 #include <limits.h>
 #include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <sched.h>
+#include <signal.h>
+#include <pthread.h>
 /*Common C*/
 #include <time.h>
 #include <math.h>
@@ -28,8 +34,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
-#include <pthread.h>
 /*Linux*/
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
