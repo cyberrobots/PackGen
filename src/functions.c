@@ -586,7 +586,8 @@ void packet_gen_write_rx_result(packgen_t*p,unsigned long rx_num,packge_time_sta
 	
 	memset(fname_time_stats,0, 2 * PGEN_MAX_PATHNAME_LEN);
 
-	if(strcmp(p->path,"./")!=0){
+	if(strcmp(p->path,"./")==0)
+	{
 		if(strlen(p->f_name)!=0){
 			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats_%s.mat",p->path,size,p->f_name);
 		}else{
