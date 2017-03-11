@@ -24,6 +24,13 @@
 #define P_SUCCESS	( 0)
 #define P_FAILURE	(-1)
 
+#ifndef likely
+#define likely(x) 	__builtin_expect((x),1)
+#endif
+
+#ifndef unlikely
+#define unlikely(x) __builtin_expect((x),0)
+#endif
 
 /* Defines for configurations variables */
 #define PGEN_MANDATORY_VAR_NUM	(2)
@@ -52,9 +59,10 @@
 
 typedef struct
 {
-	char				tx_dev[IFNAMSIZ];
-	char				rx_dev[IFNAMSIZ];
-	char				path  [PGEN_MAX_PATHNAME_LEN];
+	char				tx_dev	[IFNAMSIZ];
+	char				rx_dev	[IFNAMSIZ];
+	char				path  	[PGEN_MAX_PATHNAME_LEN];
+	char				f_name  [PGEN_MAX_PATHNAME_LEN];
 	unsigned long		tx_interval;
 	unsigned long   	packetsNum;
 	uint16_t			packetSize;

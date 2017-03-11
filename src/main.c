@@ -22,6 +22,7 @@
  * --------------------------------------------------
  * --------------------------------------------------
  * sudo ./PacketGenerator devout enx00116b67376c devin enp0s25 dstmac 00:11:6b:67:37:6c proto 0x0808 num 1000000 inter 100 write 1
+ * sudo ./PacketGenerator f_name test1 devout enx00e097005173 devin enp0s25 dstmac 00:11:6b:67:37:6c proto 0x0808 num 100 inter 2 write 1
  */
 /*Libraries*/
 #include "libraries.h"

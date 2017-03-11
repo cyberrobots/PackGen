@@ -25,6 +25,7 @@ packgen_t* new_packet_gen(void)
 	
 	/* Assign Initial Values */
 	strcpy(gen->path,"./");
+	memset(gen->f_name,0,PGEN_MAX_PATHNAME_LEN);
 	memset(gen->srcmac,0x00		,PGEN_ETH_MAC_LEN);
 	memset(gen->dstmac,0x00		,PGEN_ETH_MAC_LEN);
 	
@@ -89,11 +90,13 @@ IMPORT(deviceIn_import)
 IMPORT(deviceDstMac_import)
 IMPORT(deviceSrcMac_import)
 IMPORT(protocol_import)
+IMPORT(filename_import)
 IMPORT(write_output)
 
 static pgen_variable_t pgen_var_table[] =
 {
 	{"help",		show_help			,""								},
+	{"f_name",		filename_import		,"Filename"						},	
 	{"path",		path_import			,"Relative"						},
 	{"num",			numOfPackets_import	,"Packets Number"				},
 	{"inter",		txInterval_import	,"Transmit interval (usec)"		},
@@ -137,11 +140,21 @@ void write_output(char* var,packgen_t* p)
 void path_import(char* var,packgen_t* p)
 {
 	if(var && p){
-		strncpy(p->path,var,strlen(var)<PGEN_MAX_PATHNAME_LEN?strlen(var):PGEN_MAX_PATHNAME_LEN);
+		strncpy(p->path,var,(strlen(var)<(PGEN_MAX_PATHNAME_LEN-1))?strlen(var):(PGEN_MAX_PATHNAME_LEN-1));
 	}
 	
 	PP("Path [%s]",p->path);
 }
+
+void filename_import(char* var,packgen_t* p)
+{
+	if(var && p){
+		strncpy(p->f_name,var,(strlen(var)<(PGEN_MAX_PATHNAME_LEN-1))?strlen(var):(PGEN_MAX_PATHNAME_LEN-1));
+	}
+	
+	PP("FileName [%s]",p->f_name);
+}
+
 
 void numOfPackets_import(char* var,packgen_t* p)
 {
@@ -515,33 +528,47 @@ failure:
 	return P_FAILURE;
 }
 
-
-
 void packet_gen_udelay(unsigned long microns)
 {
 	if(!microns){
+		//perror("Bad Microns Value...");
 		return;
 	}
 	
-	/*Delay function with microseconds accuracy*/
-	struct timeval delay;
-	struct timeval target;
-	struct timeval now;
-	delay.tv_sec = 0;
-	delay.tv_usec = microns;
-	while (delay.tv_usec >= 1000000)
+	if(unlikely(microns >= 1000000))
 	{
-		delay.tv_sec++;
-		delay.tv_usec -= 1000000;
+		/* Don't really care about accuracy here */
+		unsigned int sleepTime = (microns / 1000000);
+		
+		do
+		{
+			sleepTime = sleep(sleepTime);
+
+		}while(sleepTime!=0);
+
 	}
+	else
+	{
 
-	gettimeofday(&now, NULL);
-	timeradd(&now, &delay, &target);
+		/*Delay function with microseconds accuracy*/
+		struct timeval delay;
+		struct timeval target;
+		struct timeval now;
+		delay.tv_sec = 0;
+		delay.tv_usec = microns;
+		while (delay.tv_usec >= 1000000)
+		{
+			delay.tv_sec++;
+			delay.tv_usec -= 1000000;
+		}
 
-	do {
 		gettimeofday(&now, NULL);
-	} while (timercmp(&now, &target,<));
+		timeradd(&now, &delay, &target);
 
+		do {
+			gettimeofday(&now, NULL);
+		} while (timercmp(&now, &target,<));
+	}
 }
 
 
@@ -549,7 +576,7 @@ void packet_gen_write_rx_result(packgen_t*p,unsigned long rx_num,packge_time_sta
 {
 #define APPEND(m,...) fprintf(time_analysis,m"\n",##__VA_ARGS__)	
 	/* Output Files 		*/
-	char fname_time_stats[ 2 * PGEN_MAX_PATHNAME_LEN];
+	char fname_time_stats[ 3 * PGEN_MAX_PATHNAME_LEN];
 	FILE*				time_analysis 	= NULL;
 	unsigned long i = 0, temp = 0;
 	
@@ -560,9 +587,17 @@ void packet_gen_write_rx_result(packgen_t*p,unsigned long rx_num,packge_time_sta
 	memset(fname_time_stats,0, 2 * PGEN_MAX_PATHNAME_LEN);
 
 	if(strcmp(p->path,"./")!=0){
-		snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats.txt",p->path,size);
+		if(strlen(p->f_name)!=0){
+			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats_%s.mat",p->path,size,p->f_name);
+		}else{
+			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats.mat",p->path,size);
+		}
 	}else{
-		snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_stats.txt",p->path,size);
+		if(strlen(p->f_name)!=0){
+			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_stats_%s.mat",p->path,size,p->f_name);
+		}else{
+			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_stats.mat",p->path,size);
+		}
 	}
 	
 	time_analysis = fopen(fname_time_stats,"w");
