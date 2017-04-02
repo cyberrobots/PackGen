@@ -1,8 +1,4 @@
 # PackGen
-================
-Email : cyberrobots[at]gmail.com
-Feel free contanting me.
-
 
 Code Description.
 --------------------------------------------------
@@ -15,6 +11,7 @@ make
 make clean
 
 #Usage
+
 0)        help                                                                                                                                                                                                                                                  
 1)        f_name          Filename
 2)        path            Relative
@@ -31,3 +28,7 @@ make clean
 # Examples
 sudo ./PacketGenerator devout eth0 devin eth1 dstmac 00:aa:bb:cc:aa:aa proto 0x0808 num 1000000 inter 100 write 1
 sudo ./PacketGenerator f_name test1 devout eth0 devin eth1 dstmac 00:aa:bb:cc:aa:aa proto 0x0808 num 100 inter 2 write 1
+
+
+Email : cyberrobots[at]gmail.com
+Feel free contanting me.
