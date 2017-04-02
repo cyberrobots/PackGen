@@ -10,19 +10,19 @@ make
 
 make clean
 
-#Usage
+# Usage
 
-0)        help                                                                                                                                                                                                                                                  
-1)        f_name          Filename
-2)        path            Relative
-3)        num             Packets Number
-4)        inter           Transmit interval (usec)
-5)        devout          Transmit interface
-6)        devin           Receive interface
-7)        dstmac          Target's Rx MAC address
-8)        srcmac          Target's Tx MAC address
-9)        proto           Protocol (default: 0x0808)
-10)       write           Write to file.
+        help                                                                                                                                                                                                                                                  
+        f_name          Filename
+        path            Relative
+        num             Packets Number
+        inter           Transmit interval (usec)
+        devout          Transmit interface
+        devin           Receive interface
+        dstmac          Target's Rx MAC address
+        srcmac          Target's Tx MAC address
+        proto           Protocol (default: 0x0808)
+        write           Write to file.
 
 
 # Examples
