@@ -1,14 +1,14 @@
 #! /bin/bash
 
-SavePath=/media/slyras/Sammy/4.Measures/11_March/
-TxDevice=enx00e097005173
-RxDevice=enp0s25
+SavePath=./
+TxDevice=eth0
+RxDevice=eth1
 Proto=0x0808
-PackNumber=100
-DstMac=00:11:6b:67:37:6c
+PackNumber=10000000
+DstMac=00:aa:bb:cc:11:22
 SrcMac=""
 WriteAnalysis=1
-Interval=0
+Interval=1000
 
 ReportFile=$SavePath/Report_$(date +"%H_%M_%S")_.txt
 
@@ -22,7 +22,7 @@ for i  in {1..5}
 do
 	filename="test_$i"
 	echo "Test name: $filename"
-	Interval=$(( 10 ** (i-1) ))
+	Interval=$(( 10 ** (i-1) )) ## Increase Interval exponentially
 	cmd="sudo ./PacketGenerator path $SavePath f_name $filename devout $TxDevice devin $RxDevice dstmac $DstMac proto $Proto num $PackNumber inter $Interval write $WriteAnalysis"
 	echo $cmd
 	$cmd
