@@ -35,7 +35,7 @@ packgen_t* new_packet_gen(void)
 	memset(gen->proto,0x08,PGEN_ETH_PROTO_LEN);
 
 	gen->tx_interval 	= 0;
-	gen->packetsNum  	= 0xFFFFFFFFFFFFFFFF;
+	gen->packetsNum  	= ULONG_MAX;
 	gen->packetSize		= PGEN_ETH_FRAME;
 	gen->tx_sock		= -1;
 	gen->rx_sock		= -1;
