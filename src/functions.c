@@ -11,7 +11,7 @@
 #include "variables.h"
 #include "functions.h"
 
-
+#include <limits.h>
 
 packgen_t* new_packet_gen(void)
 {
@@ -35,7 +35,7 @@ packgen_t* new_packet_gen(void)
 	memset(gen->proto,0x08,PGEN_ETH_PROTO_LEN);
 
 	gen->tx_interval 	= 0;
-	gen->packetsNum  	= 0xFFFFFFFFFFFFFFFF;
+	gen->packetsNum  	= LONG_MAX;
 	gen->packetSize		= PGEN_ETH_FRAME;
 	gen->tx_sock		= -1;
 	gen->rx_sock		= -1;
@@ -361,7 +361,7 @@ int pack_gen_init_sock(packgen_t* p,uint8_t direction)
 	}
 	
 
-	if(ioctl(s, SIOCGIFINDEX,ifr)<0){	
+	if(ioctl(s, SIOCGIFINDEX,&ifr)<0){	
 		perror("SIOCGIFINDEX");
 		goto failure;
 	}
