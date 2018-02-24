@@ -1,5 +1,4 @@
 *.map
-*.m
 *.txt
 /PacketGenerator
 *.mat
