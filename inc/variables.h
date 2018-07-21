@@ -10,7 +10,7 @@
 #ifndef VARIABLES_H_
 #define VARIABLES_H_
 
-#ifdef DEBUG
+#if 1
 #define PP(m,...) 		do{fprintf(stdout,"[%s][%d]"m"\r\n",__func__,__LINE__,##__VA_ARGS__);}while(0);
 #define P_INFO(m,...) 	do{fprintf(stdout,"[INFO]"m"\r\n",##__VA_ARGS__);}while(0);
 #define P_ERROR(m,...) 	do{fprintf(stderr,"[ERROR]"m"\r\n",##__VA_ARGS__);}while(0);

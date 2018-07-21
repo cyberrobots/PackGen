@@ -55,7 +55,7 @@ void* PackGen_Rx_Thread(void* args)
 				break;
 		}
 #else		
-		ret =  poll(&ufd,1,3500);
+		ret =  poll(&ufd,1,60000);
 		switch(ret)
 		{
 			case -1:

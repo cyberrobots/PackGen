@@ -4,11 +4,11 @@ SavePath=./
 TxDevice=eth0
 RxDevice=eth1
 Proto=0x0808
-PackNumber=100000
+PackNumber=1000
 DstMac=28:d2:44:b0:58:b9
 SrcMac=""
 WriteAnalysis=1
-Interval=1000
+Interval=2000
 
 ReportFile=$SavePath/Report_$(date +"%H_%M_%S")_.txt
 
