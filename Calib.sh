@@ -1,14 +1,15 @@
 #! /bin/bash
 
-SavePath=./
+SavePath=./jul21/
 TxDevice=eth0
 RxDevice=eth1
 Proto=0x0808
-PackNumber=1000
+PackNumber=1000000
+Size=555
 DstMac=28:d2:44:b0:58:b9
 SrcMac=""
 WriteAnalysis=1
-Interval=2000
+Interval=500
 
 ReportFile=$SavePath/Report_$(date +"%H_%M_%S")_.txt
 
@@ -23,7 +24,7 @@ do
 	filename="test_$i"
 	echo "Test name: $filename"
 	#Interval=$(( 10 ** (i) )) ## Increase Interval exponentially
-	cmd="sudo ./PacketGenerator path $SavePath f_name $filename devout $TxDevice devin $RxDevice dstmac $DstMac proto $Proto num $PackNumber inter $Interval write $WriteAnalysis"
+	cmd="sudo ./PacketGenerator path $SavePath f_name $filename devout $TxDevice devin $RxDevice dstmac $DstMac proto $Proto num $PackNumber inter $Interval write $WriteAnalysis size $Size"
 	echo $cmd
 	$cmd
 
