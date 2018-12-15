@@ -84,6 +84,7 @@ void packet_gen_signal(int signum)
 IMPORT(show_help)
 IMPORT(path_import)
 IMPORT(numOfPackets_import)
+IMPORT(SizeOfPackets_import)
 IMPORT(txInterval_import)
 IMPORT(deviceOut_import)
 IMPORT(deviceIn_import)
@@ -99,6 +100,7 @@ static pgen_variable_t pgen_var_table[] =
 	{"f_name",		filename_import		,"Filename"						},	
 	{"path",		path_import			,"Relative"						},
 	{"num",			numOfPackets_import	,"Packets Number"				},
+	{"size",		SizeOfPackets_import,"Size of Packets"				},
 	{"inter",		txInterval_import	,"Transmit interval (usec)"		},
 	{"devout",		deviceOut_import	,"Transmit interface"			},
 	{"devin",		deviceIn_import		,"Receive interface"			},
@@ -171,6 +173,23 @@ void numOfPackets_import(char* var,packgen_t* p)
 	
 	PP("Num of packets [%lu]",p->packetsNum);
 }
+
+void SizeOfPackets_import(char* var,packgen_t* p)
+{
+	long long val = strtol(var,NULL,0);
+	
+	if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+			|| (errno != 0 && val == 0)) {
+		perror("strtol");
+		P_ERROR("Problem while importing packets number");
+		return;
+	}
+	
+	p->packetSize = (uint16_t)val;
+	
+	PP("Size of packets [%u]",p->packetSize);
+}
+
 
 void txInterval_import(char* var,packgen_t* p)
 {
@@ -576,7 +595,7 @@ void packet_gen_write_rx_result(packgen_t*p,unsigned long rx_num,packge_time_sta
 {
 #define APPEND(m,...) fprintf(time_analysis,m"\n",##__VA_ARGS__)	
 	/* Output Files 		*/
-	char fname_time_stats[ 3 * PGEN_MAX_PATHNAME_LEN];
+	char fname_time_stats[10 * PGEN_MAX_PATHNAME_LEN];
 	FILE*				time_analysis 	= NULL;
 	unsigned long i = 0, temp = 0;
 	
@@ -584,18 +603,18 @@ void packet_gen_write_rx_result(packgen_t*p,unsigned long rx_num,packge_time_sta
 		return;
 	}
 	
-	memset(fname_time_stats,0, 2 * PGEN_MAX_PATHNAME_LEN);
+	memset(fname_time_stats,0, sizeof(fname_time_stats));
 
 	if(strcmp(p->path,"./")==0)
 	{
 		if(strlen(p->f_name)!=0){
-			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats_%s.mat",p->path,size,p->f_name);
+			snprintf(fname_time_stats, sizeof(fname_time_stats)-1,"./%s/PackGen_%d_stats_%s.mat",p->path,size,p->f_name);
 		}else{
 			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"./%s/PackGen_%d_stats.mat",p->path,size);
 		}
 	}else{
 		if(strlen(p->f_name)!=0){
-			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_stats_%s.mat",p->path,size,p->f_name);
+			snprintf(fname_time_stats, sizeof(fname_time_stats)-1,"%sPackGen_%d_stats_%s.mat",p->path,size,p->f_name);
 		}else{
 			snprintf(fname_time_stats, 2 * PGEN_MAX_PATHNAME_LEN,"%sPackGen_%d_stats.mat",p->path,size);
 		}
