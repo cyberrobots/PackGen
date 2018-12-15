@@ -32,18 +32,6 @@
 int main(int argc, char *argv[])
 {
 	
-	pid_t process = getpid();
-	
-	P_INFO("\n***Starting The Generator [%d] ***\n",process);
-
-    // Check user id, if not sudo exit.
-    //if(getuid()!=0){
-    //    P_INFO("Root access required!");
-    //    exit(0);
-    //}
-	
-	
-	
 	packgen_t* packgen = new_packet_gen();
 	if(!packgen){
 		P_INFO("Init failed!");
@@ -51,11 +39,24 @@ int main(int argc, char *argv[])
 	}
 
 	//Print systems specification.
-    if(packet_gen_specification_read(argc,argv,packgen)<0){
+	int init = packet_gen_specification_read(argc,argv,packgen);
+    if(init == P_FAILURE){
 		P_ERROR("Parameters");
 		goto failure;
+	}else if ( init == P_SUCCESS1){
+		//  printed only help and exit
+		goto failure;
 	}
-	
+
+	pid_t process = getpid();
+    
+	// Check user id, if not sudo exit.
+    if(getuid()!=0){
+        P_INFO("Root access required!");
+        goto failure;
+    }
+
+	P_INFO("\n***Starting The Generator [%d] ***\n",process);	
 	
 	if(packet_gen_start(packgen)<0){
 		P_ERROR("Packet Generator Failed.....");

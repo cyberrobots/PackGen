@@ -298,6 +298,13 @@ void protocol_import(char* var,packgen_t* p)
 int packet_gen_specification_read(int argc, char *argv[],packgen_t* args)
 {
 	P_INFO("---System Initialize---");
+
+	if( argc == 2 && !strcmp(argv[1],"help") ){
+		pack_gen_usage();
+
+		return P_SUCCESS1;
+	}
+
 	/*Grab variables from console*/
 	if( ( (argc) < (2 * PGEN_MANDATORY_VAR_NUM) ) || ((argc-1)%2) )
 	{

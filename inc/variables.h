@@ -21,6 +21,7 @@
 #endif
 
 
+#define P_SUCCESS1	( 1)
 #define P_SUCCESS	( 0)
 #define P_FAILURE	(-1)
 
