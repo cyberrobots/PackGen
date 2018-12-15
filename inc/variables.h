@@ -39,9 +39,9 @@
 
 /*Basic Defines for Network Interface*/
 #define PGEN_ETH_HEADER_LEN		ETH_HLEN	/*Total octets in header.*/
-#define PGEN_ETH_FRAME			ETH_FRAME_LEN
+#define PGEN_ETH_FRAME			(ETH_FRAME_LEN - (2* PGEN_ETH_MAC_LEN) - PGEN_ETH_PROTO_LEN - 20)
 #define PGEN_ETH_PROTO_LEN 		(PGEN_ETH_HEADER_LEN - (2 * PGEN_ETH_MAC_LEN))
-#define PGEN_ETH_MAC_LEN		ETH_ALEN
+#define PGEN_ETH_MAC_LEN		(ETH_ALEN)
 //#define ETH_P_NULL				0x0808 /*Packet Protocol, self defined/don't care.*/
 
 #define MAC_ADDR_S		"[%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x]"
