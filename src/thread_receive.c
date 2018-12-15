@@ -13,6 +13,9 @@
 
 static inline void byte2time(uint8_t* input, struct timeval *output);
 
+
+static unsigned long _rxCounter=0;
+
 void* PackGen_Rx_Thread(void* args)
 {
 	packgen_t* p = (packgen_t*)args;
@@ -23,6 +26,7 @@ void* PackGen_Rx_Thread(void* args)
 	struct timeval	timediff1;
 	unsigned long 	PacketsReceived	= 0;
 	packge_time_stats_t* packStats	= NULL;
+	int size =0;
 	
 	struct pollfd ufd;
 	
@@ -71,8 +75,9 @@ void* PackGen_Rx_Thread(void* args)
 				if (ufd.revents & POLLIN) 
 				{
 					//recvfrom(p->rx_sock,tx_buff,PGEN_ETH_FRAME,0,NULL,NULL);
-					recv(p->rx_sock, tx_buff,p->packetSize, 0); // receive normal data
+					size = recv(p->rx_sock, tx_buff,p->packetSize, 0); // receive normal data
 					gettimeofday(&timediff0,NULL);
+					PP("Packet Received [%lu] Size[%d]",_rxCounter++,size);
 					if(memcmp(&tx_buff[12],p->proto,2)==0)
 					{
 						if(p->WriteRxData==1)
