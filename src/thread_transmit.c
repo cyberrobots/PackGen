@@ -24,20 +24,39 @@ void* PackGen_Tx_Thread(void* args)
 	unsigned long 	PacketsSent	= 0;
 
 	memset(&tx_buff[indx],0xDE,p->packetSize);
+
+	uint8_t empty[PGEN_ETH_MAC_LEN];
+	memset(empty,0x0,PGEN_ETH_MAC_LEN);
 	
-	//Generators Tx interface MAC address
-	memcpy(&tx_buff[indx],p->p_srcmac,PGEN_ETH_MAC_LEN);
+	/* Generators Tx interface MAC address */
+	if(!memcmp(p->dstmac,empty,PGEN_ETH_MAC_LEN)){
+		memcpy(&tx_buff[indx],p->p_srcmac,PGEN_ETH_MAC_LEN);
+	}else{
+		memcpy(&tx_buff[indx],p->dstmac,PGEN_ETH_MAC_LEN);
+	}
+
 	indx+=PGEN_ETH_MAC_LEN;
-	//Target's Rx interface MAC addres
-	memcpy(&tx_buff[indx],p->dstmac,PGEN_ETH_MAC_LEN);
+
+	/* Target's Rx interface MAC addres */
+
+	if(!memcmp(p->srcmac,empty,PGEN_ETH_MAC_LEN)){
+		memcpy(&tx_buff[indx],p->p_dstmac,PGEN_ETH_MAC_LEN);
+	}else{
+		memcpy(&tx_buff[indx],p->srcmac,PGEN_ETH_MAC_LEN);
+	}
+	
 	indx+=PGEN_ETH_MAC_LEN;
+
 	memcpy(&tx_buff[indx],p->proto,PGEN_ETH_PROTO_LEN);
 	indx+=PGEN_ETH_PROTO_LEN;
 	
 	PP("HeaderSize [%d]",indx);
 	PP("Proto [%2.2x%2.2x]",p->proto[0],p->proto[1]);
-	PP("MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_srcmac));
-	PP("MAC:"MAC_ADDR_S,MAC_ADDR_V(p->dstmac));
+	PP("pgen_in  MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_srcmac));
+	PP("pgen_out MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_dstmac));
+	PP("SrcMAC:"MAC_ADDR_S,MAC_ADDR_V(p->srcmac));
+	PP("DstMAC:"MAC_ADDR_S,MAC_ADDR_V(p->dstmac));
+	
 	
 	
 	uint8_t* timeStampNeedle = &tx_buff[indx];
