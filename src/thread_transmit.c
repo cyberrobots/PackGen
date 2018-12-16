@@ -20,14 +20,12 @@ void* PackGen_Tx_Thread(void* args)
 	uint8_t tx_buff[p->packetSize];
 	uint16_t indx	= 0;
 	struct timeval timeStamp;
-	
 	unsigned long 	PacketsSent	= 0;
-
-	memset(&tx_buff[indx],0xDE,p->packetSize);
 
 	uint8_t empty[PGEN_ETH_MAC_LEN];
 	memset(empty,0x0,PGEN_ETH_MAC_LEN);
-	
+	memset(&tx_buff[indx],0xDE,p->packetSize);
+
 	/* Generators Tx interface MAC address */
 	if(!memcmp(p->dstmac,empty,PGEN_ETH_MAC_LEN)){
 		memcpy(&tx_buff[indx],p->p_srcmac,PGEN_ETH_MAC_LEN);
@@ -44,14 +42,28 @@ void* PackGen_Tx_Thread(void* args)
 	}else{
 		memcpy(&tx_buff[indx],p->srcmac,PGEN_ETH_MAC_LEN);
 	}
-	
 	indx+=PGEN_ETH_MAC_LEN;
+
+
+	if(p->vlan!=-1)
+	{
+		PP("Vlan is enabled!!!");
+		uint8_t tpid[2] = {0x81,0x00};
+		memcpy(&tx_buff[indx],&tpid,2);
+		indx+=2;
+		uint8_t pcpdei = 0x10;
+		memcpy(&tx_buff[indx],&pcpdei,1);
+		indx+=1;
+		memcpy(&tx_buff[indx],&p->vlan,1);
+		indx+=1;
+	}
 
 	memcpy(&tx_buff[indx],p->proto,PGEN_ETH_PROTO_LEN);
 	indx+=PGEN_ETH_PROTO_LEN;
 	
 	PP("HeaderSize [%d]",indx);
 	PP("Proto [%2.2x%2.2x]",p->proto[0],p->proto[1]);
+	PP("VLan  [%d]",(p->vlan));
 	PP("pgen_in  MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_srcmac));
 	PP("pgen_out MAC:"MAC_ADDR_S,MAC_ADDR_V(p->p_dstmac));
 	PP("SrcMAC:"MAC_ADDR_S,MAC_ADDR_V(p->srcmac));

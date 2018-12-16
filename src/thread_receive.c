@@ -21,6 +21,8 @@ void* PackGen_Rx_Thread(void* args)
 	packgen_t* p = (packgen_t*)args;
 	uint8_t tx_buff[p->packetSize];
 	uint16_t indx	= 0;
+	uint8_t maskIdx = 0;
+	uint8_t* mask = NULL;
 
 	struct timeval	timediff0;
 	struct timeval	timediff1;
@@ -45,6 +47,26 @@ void* PackGen_Rx_Thread(void* args)
 	ufd.events = POLLIN|POLLPRI; // check for just normal data
 	int ret = 0;
 	
+
+	if(p->vlan!=-1){
+		// Vlan is enabled
+		mask = malloc(6);
+		uint8_t tpid[2] = {0x81,0x00};
+		uint8_t pcpdei = 0x10;
+		memcpy(&mask[maskIdx],tpid,2);
+		maskIdx+=2;
+		memcpy(&mask[maskIdx],&pcpdei,1);
+		maskIdx+=1;
+		memcpy(&mask[maskIdx],&p->vlan,1);
+		maskIdx+=1;
+		memcpy(&mask[maskIdx],p->proto,2);
+		maskIdx+=2;
+	}else{
+		mask = malloc(2);
+		memcpy(&mask[maskIdx],p->proto,2);
+		maskIdx+=2;
+	}
+
 	
 	while(1)
 	{
@@ -78,7 +100,7 @@ void* PackGen_Rx_Thread(void* args)
 					size = recv(p->rx_sock, tx_buff,p->packetSize, 0); // receive normal data
 					gettimeofday(&timediff0,NULL);
 					PP("Packet Received [%lu] Size[%d]",_rxCounter++,size);
-					if(memcmp(&tx_buff[12],p->proto,2)==0)
+					if(memcmp(&tx_buff[12],mask,maskIdx)==0)
 					{
 						if(p->WriteRxData==1)
 						{
@@ -135,6 +157,10 @@ normalOut:
 failure:
 	if(packStats){
 		free(packStats);
+	}
+
+	if(mask){
+		free(mask);
 	}
 	
 	

@@ -73,6 +73,7 @@ typedef struct
 	uint8_t				srcmac	[PGEN_ETH_MAC_LEN]; /* target tx mac */
 	uint8_t				dstmac	[PGEN_ETH_MAC_LEN]; /* target rx mac */
 	uint8_t				proto 	[PGEN_ETH_PROTO_LEN];
+	unsigned int 		vlan ;						/* VID in vlans is 12 bits aka 3 bytes */
 	/* Socket descriptors 	*/
 	int					tx_sock;
 	int					rx_sock;

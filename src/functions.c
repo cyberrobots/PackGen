@@ -34,6 +34,7 @@ packgen_t* new_packet_gen(void)
 	
 	memset(gen->proto,0x08,PGEN_ETH_PROTO_LEN);
 
+	gen->vlan=-1;
 	gen->tx_interval 	= 0;
 	gen->packetsNum  	= LONG_MAX;
 	gen->packetSize		= PGEN_ETH_FRAME;
@@ -90,6 +91,7 @@ IMPORT(deviceOut_import)
 IMPORT(deviceIn_import)
 IMPORT(deviceDstMac_import)
 IMPORT(deviceSrcMac_import)
+IMPORT(vlanTag_import)
 IMPORT(protocol_import)
 IMPORT(filename_import)
 IMPORT(write_output)
@@ -106,6 +108,7 @@ static pgen_variable_t pgen_var_table[] =
 	{"devin",		deviceIn_import		,"Receive interface"			},
 	{"dstmac",		deviceDstMac_import	,"Target's Rx MAC address"		},
 	{"srcmac",		deviceSrcMac_import	,"Target's Tx MAC address"		},
+	{"vlan",		vlanTag_import		,"Vlan ID"						},
 	{"proto",		protocol_import		,"Protocol (default: 0x0808)"	},
 	{"write",		write_output		,"Write to file."				},
 };
@@ -293,6 +296,15 @@ void protocol_import(char* var,packgen_t* p)
 	memcpy(p->proto,&values,2);
 	
 	PP("Proto [0x%2.2x%2.2x]",p->proto[0],p->proto[1]);
+}
+
+void vlanTag_import(char* var, packgen_t* p)
+{
+    if(sscanf(var,"%d",&p->vlan)!=1){
+        P_ERROR("Failed reading");
+		return;
+    }
+	PP("Vlan Tag %d",(p->vlan));
 }
 
 int packet_gen_specification_read(int argc, char *argv[],packgen_t* args)
