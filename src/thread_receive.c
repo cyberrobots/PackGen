@@ -23,8 +23,6 @@ void* PackGen_Rx_Thread(void* args)
 	uint16_t indx	= 0;
 	uint8_t maskIdx = 0;
 	uint8_t* mask = NULL;
-	uint8_t protomaskIdx = 0;
-	uint8_t* protomask = NULL;
 
 	struct timeval	timediff0;
 	struct timeval	timediff1;
@@ -63,17 +61,10 @@ void* PackGen_Rx_Thread(void* args)
 		maskIdx+=1;
 		memcpy(&mask[maskIdx],p->proto,2);
 		maskIdx+=2;
-
-		protomask = malloc(2);
-		memcpy(&mask[protomaskIdx],p->proto,2);
-		protomaskIdx+=2;
-
 	}else{
-
-		protomask = malloc(2);
-		memcpy(&mask[protomaskIdx],p->proto,2);
-		protomaskIdx+=2;
-
+		mask = malloc(2);
+		memcpy(&mask[maskIdx],p->proto,2);
+		maskIdx+=2;
 	}
 
 	
@@ -109,7 +100,7 @@ void* PackGen_Rx_Thread(void* args)
 					size = recv(p->rx_sock, tx_buff,p->packetSize, 0); // receive normal data
 					gettimeofday(&timediff0,NULL);
 					PP("Packet Received [%lu] Size[%d]",_rxCounter++,size);
-					if(!memcmp(&tx_buff[12],mask,maskIdx) || !memcmp(&tx_buff[12],protomask,protomaskIdx))
+					if(memcmp(&tx_buff[12],mask,maskIdx)==0)
 					{
 						if(p->WriteRxData==1)
 						{
@@ -170,10 +161,6 @@ failure:
 
 	if(mask){
 		free(mask);
-	}
-
-	if(protomask){
-		free(protomask);
 	}
 	
 	
